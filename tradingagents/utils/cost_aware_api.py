@@ -4,12 +4,11 @@ Provides rate limiting, cost tracking, and profile-based controls.
 """
 
 import time
-import asyncio
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, Callable
 from functools import wraps
 from datetime import datetime, timedelta
 import threading
-from collections import defaultdict, deque
+from collections import deque
 
 from config.cost_profiles import get_cost_manager, CostProfile
 
@@ -296,13 +295,13 @@ def print_cost_summary():
     # Check for alerts
     alerts = cost_manager.check_spending_alerts()
     if alerts:
-        print(f"\n🚨 Alerts:")
+        print("\n🚨 Alerts:")
         for alert in alerts:
             print(f"   {alert}")
 
     # API usage
     if summary["daily_usage"]:
-        print(f"\n📊 Today's API Usage:")
+        print("\n📊 Today's API Usage:")
         for api, count in summary["daily_usage"].items():
             limits = cost_manager.get_api_limits(api)
             usage_percent = (count / limits.requests_per_day) * 100
@@ -332,7 +331,7 @@ if __name__ == "__main__":
 
     # Show stats
     stats = demo_api.get_stats()
-    print(f"\n📊 Demo API Stats:")
+    print("\n📊 Demo API Stats:")
     print(f"   Total Requests: {stats['total_requests']}")
     print(f"   Total Cost: ${stats['total_cost']:.4f}")
     print(f"   Average Cost: ${stats['average_cost']:.4f}")

@@ -6,10 +6,9 @@ Provides tools to monitor, control, and optimize API spending.
 
 import argparse
 import sys
-import os
-from pathlib import Path
-from datetime import datetime, timedelta
 import json
+from pathlib import Path
+from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -47,17 +46,19 @@ def show_profiles():
                 print(f"      • ... and {len(disabled_features) - 2} more")
 
         # Show API limits
-        print(f"   🔧 Key API Limits:")
+        print("   🔧 Key API Limits:")
         openai_limits = config.api_limits.get("openai")
         if openai_limits:
             print(
-                f"      • OpenAI: {openai_limits.requests_per_day}/day, ${openai_limits.monthly_budget}/mo"
+                f"      • OpenAI: {openai_limits.requests_per_day}/day, "
+                f"${openai_limits.monthly_budget}/mo"
             )
 
         alpha_limits = config.api_limits.get("alpha_vantage")
         if alpha_limits:
             print(
-                f"      • Alpha Vantage: {alpha_limits.requests_per_day}/day, ${alpha_limits.monthly_budget}/mo"
+                f"      • Alpha Vantage: {alpha_limits.requests_per_day}/day, "
+                f"${alpha_limits.monthly_budget}/mo"
             )
 
 
@@ -90,13 +91,13 @@ def show_current_status():
     print(f"{color} [{bar}] {budget_used:.1f}%")
 
     # Features status
-    print(
-        f"\n🔧 Features: {summary['features_enabled']}/{summary['total_features']} enabled"
-    )
+    features_enabled = summary["features_enabled"]
+    total_features = summary["total_features"]
+    print(f"\n🔧 Features: {features_enabled}/{total_features} enabled")
 
     # API usage today
     if summary["daily_usage"]:
-        print(f"\n📊 Today's API Usage:")
+        print("\n📊 Today's API Usage:")
         for api, count in summary["daily_usage"].items():
             limits = cost_manager.get_api_limits(api)
             usage_percent = (count / limits.requests_per_day) * 100
@@ -109,17 +110,18 @@ def show_current_status():
                 status = "🔴"
 
             print(
-                f"   {status} {api}: {count}/{limits.requests_per_day} ({usage_percent:.1f}%)"
+                f"   {status} {api}: {count}/{limits.requests_per_day} "
+                f"({usage_percent:.1f}%)"
             )
 
     # Alerts
     alerts = cost_manager.check_spending_alerts()
     if alerts:
-        print(f"\n🚨 Alerts:")
+        print("\n🚨 Alerts:")
         for alert in alerts:
             print(f"   {alert}")
     else:
-        print(f"\n✅ No spending alerts")
+        print("\n✅ No spending alerts")
 
 
 def switch_profile(profile_name: str):
@@ -147,12 +149,12 @@ def switch_profile(profile_name: str):
         disabled = old_features - new_features
 
         if enabled:
-            print(f"🟢 Newly enabled features:")
+            print("🟢 Newly enabled features:")
             for feature in enabled:
                 print(f"   • {feature.replace('_', ' ').title()}")
 
         if disabled:
-            print(f"🔴 Newly disabled features:")
+            print("🔴 Newly disabled features:")
             for feature in disabled:
                 print(f"   • {feature.replace('_', ' ').title()}")
 
@@ -179,7 +181,7 @@ def switch_profile(profile_name: str):
             with open(env_file, "w") as f:
                 f.writelines(lines)
 
-            print(f"📝 Updated .env file with new profile")
+            print("📝 Updated .env file with new profile")
 
     except ValueError:
         print(f"❌ Invalid profile '{profile_name}'. Available profiles:")
@@ -202,8 +204,10 @@ def show_api_stats():
     # Show cost summary first
     if "cost_summary" in stats:
         summary = stats["cost_summary"]
-        print(f"💰 Total Monthly Spend: ${summary.get('monthly_spend', 0):.2f}")
-        print(f"📊 Budget: ${summary.get('monthly_budget', 0):.2f}")
+        monthly_spend = summary.get("monthly_spend", 0)
+        monthly_budget = summary.get("monthly_budget", 0)
+        print(f"💰 Total Monthly Spend: ${monthly_spend:.2f}")
+        print(f"📊 Budget: ${monthly_budget:.2f}")
         print()
 
     # Show individual API stats
@@ -228,13 +232,13 @@ def show_api_stats():
 
         # Rate limit status
         rate_status = api_stats["rate_limit_status"]
-        print(f"   Rate Limits:")
-        print(
-            f"     • Per minute: {rate_status['current_minute_usage']}/{rate_status['requests_per_minute']}"
-        )
-        print(
-            f"     • Per day: {rate_status['current_daily_usage']}/{rate_status['requests_per_day']}"
-        )
+        print("   Rate Limits:")
+        minute_usage = rate_status["current_minute_usage"]
+        minute_limit = rate_status["requests_per_minute"]
+        daily_usage = rate_status["current_daily_usage"]
+        daily_limit = rate_status["requests_per_day"]
+        print(f"     • Per minute: {minute_usage}/{minute_limit}")
+        print(f"     • Per day: {daily_usage}/{daily_limit}")
         print()
 
 
@@ -269,7 +273,7 @@ def estimate_operation_cost(operation: str):
 
     print(f"   Remaining Budget: ${remaining_budget:.2f}")
     if operations_possible == float("inf"):
-        print(f"   Operations Possible: Unlimited (free operation)")
+        print("   Operations Possible: Unlimited (free operation)")
     else:
         print(f"   Operations Possible: {operations_possible}")
 

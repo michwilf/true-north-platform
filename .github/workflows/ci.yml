@@ -1,113 +1,113 @@
 name: True North Trading Platform CI
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main, develop]
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                python-version: [3.9, 3.10, 3.11]
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v4
-              with:
-                  python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-            - name: Cache pip packages
-              uses: actions/cache@v3
-              with:
-                  path: ~/.cache/pip
-                  key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/config/requirements-enhanced.txt') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pip-
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/config/requirements-enhanced.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install pytest pytest-cov black flake8 mypy
-                  pip install -r requirements.txt
-                  if [ -f config/requirements-enhanced.txt ]; then pip install -r config/requirements-enhanced.txt; fi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov black flake8 mypy
+          pip install -r requirements.txt
+          if [ -f config/requirements-enhanced.txt ]; then pip install -r config/requirements-enhanced.txt; fi
 
-            - name: Lint with flake8
-              run: |
-                  # Stop the build if there are Python syntax errors or undefined names
-                  flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-                  # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-                  flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Lint with flake8
+        run: |
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-            - name: Format check with black
-              run: |
-                  black --check --diff .
+      - name: Format check with black
+        run: |
+          black --check --diff .
 
-            - name: Type check with mypy
-              run: |
-                  mypy tradingagents/ --ignore-missing-imports --no-strict-optional
-              continue-on-error: true # Allow type check failures for now
+      - name: Type check with mypy
+        run: |
+          mypy tradingagents/ --ignore-missing-imports --no-strict-optional
+        continue-on-error: true # Allow type check failures for now
 
-            - name: Test with pytest
-              env:
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-                  ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
-              run: |
-                  python -m pytest tests/unit/ -v --tb=short
-                  python -m pytest tests/integration/ -v --tb=short --maxfail=3
-              continue-on-error: true # Allow test failures for now during setup
+      - name: Test with pytest
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+        run: |
+          python -m pytest tests/unit/ -v --tb=short
+          python -m pytest tests/integration/ -v --tb=short --maxfail=3
+        continue-on-error: true # Allow test failures for now during setup
 
-            - name: Run test runner
-              run: |
-                  python run_tests.py --category unit --no-deps-check
-              continue-on-error: true
+      - name: Run test runner
+        run: |
+          python run_tests.py --category unit --no-deps-check
+        continue-on-error: true
 
-    security:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-            - name: Install security tools
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install bandit safety
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
 
-            - name: Security scan with bandit
-              run: |
-                  bandit -r tradingagents/ -f json -o bandit-report.json
-              continue-on-error: true
+      - name: Security scan with bandit
+        run: |
+          bandit -r tradingagents/ -f json -o bandit-report.json
+        continue-on-error: true
 
-            - name: Check dependencies with safety
-              run: |
-                  safety check --json --output safety-report.json
-              continue-on-error: true
+      - name: Check dependencies with safety
+        run: |
+          safety check --json --output safety-report.json
+        continue-on-error: true
 
-    build-docs:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-            - name: Install documentation dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install mkdocs mkdocs-material
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material
 
-            - name: Build documentation
-              run: |
-                  # For now, just validate markdown files exist
-                  find docs/ -name "*.md" -exec echo "Found: {}" \;
-                  echo "Documentation structure validated"
+      - name: Build documentation
+        run: |
+          # For now, just validate markdown files exist
+          find docs/ -name "*.md" -exec echo "Found: {}" \;
+          echo "Documentation structure validated"
