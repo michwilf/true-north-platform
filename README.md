@@ -1,3 +1,4 @@
+# true-north-platform
 <p align="center">
   <img src="assets/TauricResearch.png" style="width: 60%; height: auto;">
 </p>
