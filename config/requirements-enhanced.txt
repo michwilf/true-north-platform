@@ -33,7 +33,6 @@ selenium
 # Storage & Caching
 redis
 chromadb
-sqlite3
 
 # UI & CLI
 chainlit
@@ -62,14 +61,14 @@ sentencepiece
 protobuf
 
 # Finance-Specific Models
-finbert-pytorch  # FinBERT for sentiment
+# finbert-pytorch  # FinBERT for sentiment (install separately)
 # Note: FinGPT and InvestLM will be installed via git+https
 
 # Time Series Forecasting Models
 # TimesFM (Google)
-timesfm  # If available via pip, otherwise git install
+# timesfm  # If available via pip, otherwise git install
 # Chronos (Amazon)
-chronos-forecasting
+# chronos-forecasting
 # Classical forecasting
 neuralforecast  # N-BEATS, NHITS, TFT
 darts  # Unified forecasting library
@@ -88,11 +87,11 @@ notebook
 ipywidgets
 
 # Quantitative Finance Libraries
-quantlib-python
-ta-lib  # Technical analysis
-pyfolio  # Performance analysis
-empyrical  # Risk metrics
-zipline  # Backtesting (if compatible)
+# quantlib-python  # May require compilation
+# ta-lib  # Technical analysis (requires separate C library)
+# pyfolio  # Performance analysis
+# empyrical  # Risk metrics
+# zipline  # Backtesting (if compatible)
 
 # Microsoft Qlib (Quantitative Investment Platform)
 # qlib  # Uncomment if you want full quant platform

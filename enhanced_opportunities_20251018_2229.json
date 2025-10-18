@@ -1,0 +1,242 @@
+[
+  {
+    "symbol": "MUFG",
+    "score": 40,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 15.0,
+    "price_change_5d": 2.5991800096815556,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:21.817878",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "WMT",
+    "score": 35,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 107.7300033569336,
+    "price_change_5d": 5.7835891897528775,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:21.191936",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "BAC",
+    "score": 35,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 51.279998779296875,
+    "price_change_5d": 5.405955130379526,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:27.051901",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "TEAM",
+    "score": 35,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 151.9499969482422,
+    "price_change_5d": 5.112063858919953,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:27.212838",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "BABA",
+    "score": 35,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 167.0500030517578,
+    "price_change_5d": 5.056291316692191,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:31.727176",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "XLY",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 234.4199981689453,
+    "price_change_5d": 2.4786877241290983,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:12.120838",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "BNP.PA",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 74.88999938964844,
+    "price_change_5d": -0.8079478282802153,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:15.675639",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "AVGO",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 349.3299865722656,
+    "price_change_5d": 7.608656414359947,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:16.854043",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "OR.PA",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 390.6499938964844,
+    "price_change_5d": 5.6810497353560825,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:20.732581",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "XLRE",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 42.040000915527344,
+    "price_change_5d": 3.3431676503171692,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:21.519727",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "ASML",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 1029.27001953125,
+    "price_change_5d": 9.942428016439898,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:32.109349",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "GGB",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 3.3299999237060547,
+    "price_change_5d": 5.714280091716219,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:34.099182",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "GOOGL",
+    "score": 30,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 253.3000030517578,
+    "price_change_5d": 7.0719005831583015,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:34.829684",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "HDB",
+    "score": 25,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 36.7400016784668,
+    "price_change_5d": 5.514078117375672,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:11.801885",
+    "market_regime": "NEUTRAL"
+  },
+  {
+    "symbol": "KO",
+    "score": 25,
+    "sources": [
+      "Technical"
+    ],
+    "company_name": null,
+    "sector": null,
+    "current_price": 68.44000244140625,
+    "price_change_5d": 2.08830773681366,
+    "ai_recommendation": null,
+    "ai_confidence": null,
+    "ai_target_price": null,
+    "discovered_at": "2025-10-18T22:29:16.018001",
+    "market_regime": "NEUTRAL"
+  }
+]

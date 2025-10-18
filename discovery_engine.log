@@ -1,0 +1,108 @@
+2025-10-18 22:28:55,253 - INFO - Sentiment analysis models loaded
+2025-10-18 22:28:55,253 - INFO - 🚀 Starting Enhanced Investment Discovery
+2025-10-18 22:28:56,448 - INFO - Market regime detected: NEUTRAL
+2025-10-18 22:28:56,510 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:28:57,704 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:03,487 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: NTT"}}}
+2025-10-18 22:29:03,884 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: SFT"}}}
+2025-10-18 22:29:06,753 - ERROR - $SPLK: possibly delisted; no price data found  (period=90d) (Yahoo error = "No data found, symbol may be delisted")
+2025-10-18 22:29:07,989 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:08,995 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:10,284 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:10,964 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:13,643 - ERROR - $ZEN: possibly delisted; no price data found  (period=90d) (Yahoo error = "No data found, symbol may be delisted")
+2025-10-18 22:29:13,812 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:14,622 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:17,021 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:17,770 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:19,602 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:20,268 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:20,538 - INFO - Top performing sectors: ['Utilities', 'Healthcare', 'Technology']
+2025-10-18 22:29:22,031 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:23,013 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:24,105 - ERROR - $RDSA.AS: possibly delisted; no price data found  (period=90d) (Yahoo error = "No data found, symbol may be delisted")
+2025-10-18 22:29:24,948 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:25,632 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:27,651 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:28,582 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:30,358 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:31,055 - WARNING - It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+2025-10-18 22:29:34,769 - ERROR - $SFT: possibly delisted; no price data found  (period=90d) (Yahoo error = "No data found, symbol may be delisted")
+2025-10-18 22:29:47,884 - INFO - Social media scan complete: 14 mentions
+2025-10-18 22:29:47,884 - INFO - Enhanced 96 opportunities
+2025-10-18 22:29:48,267 - WARNING - AI analysis error for MUFG: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:48,267 - WARNING - AI analysis error for WMT: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:48,267 - WARNING - AI analysis error for BAC: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:50,269 - WARNING - AI analysis error for TEAM: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:50,270 - WARNING - AI analysis error for BABA: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:50,270 - WARNING - AI analysis error for XLY: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:52,273 - WARNING - AI analysis error for BNP.PA: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:52,273 - WARNING - AI analysis error for AVGO: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:52,274 - WARNING - AI analysis error for OR.PA: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:54,276 - WARNING - AI analysis error for XLRE: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:54,276 - WARNING - AI analysis error for ASML: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:54,276 - WARNING - AI analysis error for GGB: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:56,276 - WARNING - AI analysis error for GOOGL: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:56,277 - WARNING - AI analysis error for HDB: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:56,277 - WARNING - AI analysis error for KO: unsupported format string passed to NoneType.__format__
+2025-10-18 22:29:58,278 - INFO - Discovery complete: 15 opportunities found
