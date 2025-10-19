@@ -1,0 +1,18 @@
+[Unit]
+Description=True North Trading Platform Scheduler
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/Users/MikeyW/true-north-trading
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/python3 /Users/MikeyW/true-north-trading/trading_scheduler.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/Users/MikeyW/true-north-trading/logs/service.log
+StandardError=append:/Users/MikeyW/true-north-trading/logs/service-error.log
+
+[Install]
+WantedBy=multi-user.target
+
