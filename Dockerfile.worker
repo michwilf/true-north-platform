@@ -1,0 +1,35 @@
+# True North Trading - Scheduled Worker
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY backend/config/requirements.txt ./requirements.txt
+
+# Install Python dependencies (including schedule)
+RUN pip install --no-cache-dir -r requirements.txt schedule
+
+# Copy backend code
+COPY backend/ ./backend/
+
+# Create directories
+RUN mkdir -p backend/data backend/logs
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Copy scheduler script
+COPY backend/scripts/scheduler.py ./scheduler.py
+
+# Run scheduler
+CMD ["python", "scheduler.py"]
+

@@ -126,6 +126,29 @@ async def get_trader_leaderboard(
         )
 
 
+@router.get("/consensus-signals")
+async def get_consensus_signals(
+    min_traders: int = 2,
+    system: TraderFollowingSystem = Depends(get_trader_system),
+) -> Dict[str, Any]:
+    """Get trading signals where multiple traders agree on the same position."""
+    try:
+        # Get consensus signals
+        signals = system.get_consensus_signals(min_traders=min_traders)
+
+        return {
+            "signals": signals,
+            "total_consensus": len(signals),
+            "min_traders_required": min_traders,
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching consensus signals: {str(e)}. Please try again later.",
+        )
+
+
 @router.get("/alerts", response_model=List[Alert])
 async def get_alerts(
     system: RobustMonitoringSystem = Depends(get_monitoring_system),

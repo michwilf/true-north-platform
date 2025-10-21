@@ -900,6 +900,32 @@ class TraderFollowingSystem:
 
         logger.info(f"Found {len(new_trades)} new trades for {trader.name}")
 
+    def get_followed_traders(self) -> List[Dict]:
+        """Get all followed traders with their information."""
+        traders = self.database.get_traders()
+        result = []
+
+        for trader in traders:
+            result.append(
+                {
+                    "id": trader.trader_id,
+                    "name": trader.name,
+                    "platform": trader.platform.value,
+                    "username": trader.username,
+                    "win_rate": trader.win_rate,
+                    "total_trades": trader.total_trades_tracked,
+                    "followers": trader.total_followers,
+                    "avg_return": trader.avg_return,
+                    "confidence_score": trader.confidence_score,
+                    "verified": trader.verified,
+                    "primary_strategy": trader.primary_strategy,
+                    "notification_enabled": trader.notification_enabled,
+                    "last_activity": trader.last_activity,
+                }
+            )
+
+        return result
+
     def get_trader_leaderboard(self) -> List[Dict]:
         """Get leaderboard of top performing traders."""
         return self.performance_analyzer.get_top_performers("win_rate", limit=20)

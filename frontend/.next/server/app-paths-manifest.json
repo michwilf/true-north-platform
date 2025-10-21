@@ -1,11 +1,1 @@
-{
-  "/analyze/page": "app/analyze/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/leaderboard/page": "app/leaderboard/page.js",
-  "/market-regime/page": "app/market-regime/page.js",
-  "/monitoring/page": "app/monitoring/page.js",
-  "/opportunities/page": "app/opportunities/page.js",
-  "/page": "app/page.js",
-  "/sectors/page": "app/sectors/page.js",
-  "/traders/page": "app/traders/page.js"
-}
+{}
