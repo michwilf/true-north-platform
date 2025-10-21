@@ -1,22 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   useMarketRegime,
   useOpportunities,
   useTraderSignals,
   usePortfolioMetrics,
-  api,
 } from "@/lib/api";
 import {
-  ChartBarIcon,
-  CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
 } from "@heroicons/react/24/outline";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,8 +18,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  BarChart,
-  Bar,
 } from "recharts";
 import { motion } from "framer-motion";
 

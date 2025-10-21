@@ -20,7 +20,7 @@ interface AgentAnalysis {
   recommendation: string;
   confidence: number;
   reasoning: string;
-  key_metrics?: any;
+  key_metrics?: Record<string, number>;
   sentiment_score?: number;
   news_count?: number;
   key_headlines?: string[];

@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useOpportunities } from "@/lib/api";
 import {
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   FunnelIcon,
   ArrowPathIcon,
   ChartBarIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ChevronDownIcon,
   ChevronUpIcon,
   SparklesIcon,
   NewspaperIcon,
@@ -31,8 +28,8 @@ interface StockAnalysis {
       recommendation: string;
       confidence: number;
       reasoning: string;
-      key_metrics?: any;
-      source_data?: any;
+      key_metrics?: Record<string, unknown>;
+      source_data?: Record<string, unknown>;
     };
     news_analyst: {
       recommendation: string;
@@ -41,21 +38,21 @@ interface StockAnalysis {
       sentiment_score?: number;
       news_count?: number;
       key_headlines?: string[];
-      source_data?: any;
+      source_data?: Record<string, unknown>;
     };
     fundamentals_analyst: {
       recommendation: string;
       confidence: number;
       reasoning: string;
-      key_metrics?: any;
-      source_data?: any;
+      key_metrics?: Record<string, unknown>;
+      source_data?: Record<string, unknown>;
     };
     risk_manager: {
       assessment: string;
       position_size: number;
       reasoning: string;
       risk_factors?: string[];
-      source_data?: any;
+      source_data?: Record<string, unknown>;
     };
   };
   debate_summary: string;

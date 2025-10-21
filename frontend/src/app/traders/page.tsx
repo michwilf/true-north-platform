@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTraderSignals, api } from "@/lib/api";
+import { useTraderSignals } from "@/lib/api";
 import {
   UserGroupIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   CheckBadgeIcon,
   ChartBarIcon,
   ClockIcon,
