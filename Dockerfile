@@ -45,7 +45,8 @@ COPY README.md ./
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
-COPY --from=frontend-builder /app/frontend/package*.json ./frontend/
+COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
+COPY --from=frontend-builder /app/frontend/package-lock.json ./frontend/package-lock.json
 COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
 
 # Create necessary directories
