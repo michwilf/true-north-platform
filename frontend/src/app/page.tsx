@@ -5,6 +5,7 @@ import {
   useOpportunities,
   useTraderSignals,
   usePortfolioMetrics,
+  api,
 } from "@/lib/api";
 import {
   ArrowTrendingUpIcon,
@@ -128,24 +129,24 @@ export default function Dashboard() {
                 : `$${portfolioMetrics?.total_value.toLocaleString() || "0"}`,
               change: metricsLoading
                 ? "..."
-                : `${portfolioMetrics?.daily_pnl_percent >= 0 ? "+" : ""}${
-                    portfolioMetrics?.daily_pnl_percent.toFixed(2) || "0"
-                  }%`,
-              positive: portfolioMetrics?.daily_pnl_percent >= 0,
+                : `${
+                    (portfolioMetrics?.daily_pnl_percent ?? 0) >= 0 ? "+" : ""
+                  }${(portfolioMetrics?.daily_pnl_percent ?? 0).toFixed(2)}%`,
+              positive: (portfolioMetrics?.daily_pnl_percent ?? 0) >= 0,
             },
             {
               title: "Daily P&L",
               value: metricsLoading
                 ? "Loading..."
-                : `${portfolioMetrics?.daily_pnl >= 0 ? "+" : ""}$${
-                    portfolioMetrics?.daily_pnl.toLocaleString() || "0"
-                  }`,
+                : `${(portfolioMetrics?.daily_pnl ?? 0) >= 0 ? "+" : ""}$${(
+                    portfolioMetrics?.daily_pnl ?? 0
+                  ).toLocaleString()}`,
               change: metricsLoading
                 ? "..."
-                : `${portfolioMetrics?.daily_pnl_percent >= 0 ? "+" : ""}${
-                    portfolioMetrics?.daily_pnl_percent.toFixed(2) || "0"
-                  }%`,
-              positive: portfolioMetrics?.daily_pnl >= 0,
+                : `${
+                    (portfolioMetrics?.daily_pnl_percent ?? 0) >= 0 ? "+" : ""
+                  }${(portfolioMetrics?.daily_pnl_percent ?? 0).toFixed(2)}%`,
+              positive: (portfolioMetrics?.daily_pnl ?? 0) >= 0,
             },
             {
               title: "Active Positions",

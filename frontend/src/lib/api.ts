@@ -4,6 +4,8 @@
  * Connects Next.js frontend to Python FastAPI backend
  */
 
+import { useState, useEffect } from "react";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
 
 // Types
@@ -153,28 +155,25 @@ export const useMarketRegime = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const result = await api.getMarketRegime();
-        setData(result);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const result = await api.getMarketRegime();
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
-  return { data, loading, error, refetch: () => fetchData() };
+  return { data, loading, error, refetch: fetchData };
 };
-
-// Add React imports for hooks
-import { useState, useEffect } from "react";
 
 export const useOpportunities = () => {
   const [data, setData] = useState<Opportunity[]>([]);
