@@ -189,7 +189,9 @@ export default function TradersPage() {
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center">
                   <UserGroupIcon className="h-5 w-5 mr-2" />
-                  {traders.length > 0 ? `Followed Traders (${traders.length})` : `Available Traders (${availableTraders.length})`}
+                  {traders.length > 0
+                    ? `Followed Traders (${traders.length})`
+                    : `Available Traders (${availableTraders.length})`}
                 </h2>
               </div>
               <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
@@ -287,7 +289,8 @@ export default function TradersPage() {
                               {trader.platform}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {trader.followers?.toLocaleString() || 0} followers
+                              {trader.followers?.toLocaleString() || 0}{" "}
+                              followers
                             </span>
                           </div>
                         </div>

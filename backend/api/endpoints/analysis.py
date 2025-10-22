@@ -24,8 +24,9 @@ async def analyze_stock(
     try:
         # Get current date for analysis
         from datetime import date
+
         trade_date = date.today().isoformat()
-        
+
         # Run the actual multi-agent analysis with correct parameters
         final_state, final_decision = graph.propagate(symbol.upper(), trade_date)
 
@@ -36,7 +37,7 @@ async def analyze_stock(
             "news_analyst": final_state.get("news_report", ""),
             "fundamentals_analyst": final_state.get("fundamentals_report", ""),
         }
-        
+
         debate_summary = final_state.get("investment_plan", "")
 
         # Build agent analyses from reports
@@ -49,7 +50,11 @@ async def analyze_stock(
                 agents_data.append(
                     AgentAnalysis(
                         agent_name=agent_name.replace("_", " ").title(),
-                        recommendation=final_decision if final_decision in ["BUY", "SELL", "HOLD"] else "HOLD",
+                        recommendation=(
+                            final_decision
+                            if final_decision in ["BUY", "SELL", "HOLD"]
+                            else "HOLD"
+                        ),
                         confidence=0.75,  # Default confidence
                         reasoning=reasoning,
                         key_points=[],
@@ -58,16 +63,27 @@ async def analyze_stock(
                 )
 
         # Parse the final decision string (e.g., "BUY", "SELL", "HOLD")
-        recommendation = final_decision if final_decision in ["BUY", "SELL", "HOLD"] else "HOLD"
-        
+        recommendation = (
+            final_decision if final_decision in ["BUY", "SELL", "HOLD"] else "HOLD"
+        )
+
         # Get current price for targets (simplified for now)
         import yfinance as yf
+
         ticker_data = yf.Ticker(symbol.upper())
-        current_price = ticker_data.history(period="1d")['Close'].iloc[-1] if not ticker_data.history(period="1d").empty else 100.0
-        
+        current_price = (
+            ticker_data.history(period="1d")["Close"].iloc[-1]
+            if not ticker_data.history(period="1d").empty
+            else 100.0
+        )
+
         # Calculate simple targets based on recommendation
-        target_price = current_price * 1.15 if recommendation == "BUY" else current_price
-        stop_loss = current_price * 0.95 if recommendation == "BUY" else current_price * 0.90
+        target_price = (
+            current_price * 1.15 if recommendation == "BUY" else current_price
+        )
+        stop_loss = (
+            current_price * 0.95 if recommendation == "BUY" else current_price * 0.90
+        )
 
         return StockAnalysisResponse(
             symbol=symbol.upper(),

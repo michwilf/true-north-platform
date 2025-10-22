@@ -364,12 +364,12 @@ async def discover_reddit_traders(
 ):
     """
     Discover real traders from Reddit investing communities.
-    
+
     Requires Reddit API credentials to be set:
     - REDDIT_CLIENT_ID
     - REDDIT_CLIENT_SECRET
     - REDDIT_USER_AGENT
-    
+
     Scans subreddits: SecurityAnalysis, investing, stocks, ValueInvesting, options, daytrading, etc.
     """
     try:
@@ -388,13 +388,13 @@ async def discover_reddit_traders(
                     "step2": "Click 'Create App' or 'Create Another App'",
                     "step3": "Select 'script' type",
                     "step4": "Copy the client_id and secret",
-                    "step5": "Set environment variables in Digital Ocean"
-                }
+                    "step5": "Set environment variables in Digital Ocean",
+                },
             }
 
         # Import Reddit discovery functionality
         import praw
-        
+
         reddit = praw.Reddit(
             client_id=reddit_client_id,
             client_secret=reddit_client_secret,
@@ -412,38 +412,42 @@ async def discover_reddit_traders(
         ]
 
         discovered_traders = []
-        
+
         for subreddit_name in subreddits[:3]:  # Limit to first 3 to avoid rate limits
             try:
                 subreddit = reddit.subreddit(subreddit_name)
-                
+
                 # Get top posts from the last month
                 for post in subreddit.top(time_filter="month", limit=10):
                     if post.author and post.score > 50:  # Only high-quality posts
                         author = post.author
-                        
+
                         # Create trader from Reddit user
                         trader_username = author.name
-                        
+
                         # Check if already added
-                        if trader_username not in [t["username"] for t in discovered_traders]:
-                            discovered_traders.append({
-                                "username": trader_username,
-                                "name": trader_username,
-                                "platform": "reddit",
-                                "verified": False,
-                                "karma": post.score,
-                                "subreddit": subreddit_name,
-                            })
-                        
+                        if trader_username not in [
+                            t["username"] for t in discovered_traders
+                        ]:
+                            discovered_traders.append(
+                                {
+                                    "username": trader_username,
+                                    "name": trader_username,
+                                    "platform": "reddit",
+                                    "verified": False,
+                                    "karma": post.score,
+                                    "subreddit": subreddit_name,
+                                }
+                            )
+
                         if len(discovered_traders) >= max_results:
                             break
-                
+
                 if len(discovered_traders) >= max_results:
                     break
-                    
+
                 await asyncio.sleep(2)  # Rate limiting
-                
+
             except Exception as e:
                 print(f"Error analyzing r/{subreddit_name}: {e}")
                 continue
@@ -469,7 +473,7 @@ async def discover_reddit_traders(
             "traders": discovered_traders[:10],  # Return first 10 for preview
             "subreddits_scanned": subreddits[:3],
         }
-        
+
     except ImportError:
         raise HTTPException(
             status_code=500,
