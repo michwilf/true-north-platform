@@ -60,7 +60,9 @@ export default function MarketRegimePage() {
       setLoading(true);
       setError(null);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}/api/market-regime/detailed`
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"
+        }/api/market-regime/detailed`
       );
       const data = await response.json();
       setRegimeData(data);
