@@ -8,6 +8,7 @@ from .analysis import router as analysis_router
 from .autonomous import router as autonomous_router
 from .enhanced_opportunities import router as enhanced_opportunities_router
 from .enhanced_market_regime import router as enhanced_market_regime_router
+from .enhanced_portfolio import router as enhanced_portfolio_router
 
 __all__ = [
     "market_router",
@@ -18,4 +19,5 @@ __all__ = [
     "autonomous_router",
     "enhanced_opportunities_router",
     "enhanced_market_regime_router",
+    "enhanced_portfolio_router",
 ]

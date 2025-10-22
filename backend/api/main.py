@@ -49,6 +49,7 @@ from backend.api.endpoints import (
     autonomous_router,
     enhanced_opportunities_router,
     enhanced_market_regime_router,
+    enhanced_portfolio_router,
 )
 from backend.core.discovery import EnhancedDiscoveryEngine
 from backend.core.monitoring import RobustMonitoringSystem
@@ -135,6 +136,7 @@ app.include_router(analysis_router)
 app.include_router(autonomous_router)
 app.include_router(enhanced_opportunities_router)
 app.include_router(enhanced_market_regime_router)
+app.include_router(enhanced_portfolio_router)
 
 
 @app.get("/")
