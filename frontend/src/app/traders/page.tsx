@@ -30,9 +30,11 @@ export default function TradersPage() {
     refetch: refetchSignals,
   } = useTraderSignals();
   const [traders, setTraders] = useState<Trader[]>([]);
+  const [availableTraders, setAvailableTraders] = useState<Trader[]>([]);
   const [loadingTraders, setLoadingTraders] = useState(true);
   const [selectedTrader, setSelectedTrader] = useState<string | null>(null);
   const [timeFilter, setTimeFilter] = useState<string>("24h");
+  const [followingTrader, setFollowingTrader] = useState<string | null>(null);
 
   useEffect(() => {
     loadTraders();
@@ -47,7 +49,23 @@ export default function TradersPage() {
         }/api/traders`
       );
       const data = await response.json();
-      setTraders(data);
+      setTraders(data.traders || data);
+
+      // If no traders are followed, load the leaderboard
+      if (
+        (!data.traders || data.traders.length === 0) &&
+        (!data || data.length === 0)
+      ) {
+        const leaderboardResponse = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"
+          }/api/trader-leaderboard`
+        );
+        const leaderboardData = await leaderboardResponse.json();
+        setAvailableTraders(leaderboardData.leaderboard || []);
+      } else {
+        setAvailableTraders([]);
+      }
     } catch (error) {
       console.error("Failed to load traders:", error);
     } finally {
@@ -68,6 +86,41 @@ export default function TradersPage() {
 
     return true;
   });
+
+  const followTrader = async (trader: Trader) => {
+    try {
+      setFollowingTrader(trader.id);
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"
+        }/api/traders/follow`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: trader.name,
+            platform: trader.platform,
+            username: trader.username,
+            verified: trader.verified,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to follow trader");
+      }
+
+      // Reload traders to refresh the list
+      await loadTraders();
+    } catch (error) {
+      console.error("Failed to follow trader:", error);
+      alert("Failed to follow trader. Please try again.");
+    } finally {
+      setFollowingTrader(null);
+    }
+  };
 
   const getPlatformBadgeColor = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -136,7 +189,7 @@ export default function TradersPage() {
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center">
                   <UserGroupIcon className="h-5 w-5 mr-2" />
-                  Followed Traders ({traders.length})
+                  {traders.length > 0 ? `Followed Traders (${traders.length})` : `Available Traders (${availableTraders.length})`}
                 </h2>
               </div>
               <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
@@ -203,10 +256,76 @@ export default function TradersPage() {
                       </div>
                     </motion.button>
                   ))
+                ) : availableTraders.length > 0 ? (
+                  availableTraders.map((trader, index) => (
+                    <motion.div
+                      key={trader.id || index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="px-6 py-4 hover:bg-gray-50"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <p className="font-semibold text-gray-900">
+                              {trader.name}
+                            </p>
+                            {trader.verified && (
+                              <CheckBadgeIcon className="h-4 w-4 text-blue-600" />
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            @{trader.username}
+                          </p>
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-medium border ${getPlatformBadgeColor(
+                                trader.platform
+                              )}`}
+                            >
+                              {trader.platform}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {trader.followers?.toLocaleString() || 0} followers
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="bg-gray-50 rounded px-2 py-1">
+                          <p className="text-xs text-gray-600">Win Rate</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {trader.win_rate?.toFixed(1) || 0}%
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 rounded px-2 py-1">
+                          <p className="text-xs text-gray-600">Trades</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {trader.total_trades || 0}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => followTrader(trader)}
+                        disabled={followingTrader === trader.id}
+                        className="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {followingTrader === trader.id ? (
+                          <>
+                            <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                            Following...
+                          </>
+                        ) : (
+                          <>+ Follow</>
+                        )}
+                      </button>
+                    </motion.div>
+                  ))
                 ) : (
                   <div className="p-6 text-center text-gray-500">
                     <UserGroupIcon className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p>No traders followed yet</p>
+                    <p>No traders available</p>
                   </div>
                 )}
               </div>

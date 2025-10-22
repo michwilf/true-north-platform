@@ -7,6 +7,7 @@ Handles trader following, signals, and leaderboard.
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any
 from datetime import datetime
+from pydantic import BaseModel
 
 from backend.api.models import TraderSignal, Alert
 from backend.api.dependencies import (
@@ -14,11 +15,20 @@ from backend.api.dependencies import (
     get_monitoring_system,
     get_cache_manager,
 )
-from backend.core.trader_following import TraderFollowingSystem
+from backend.core.trader_following import TraderFollowingSystem, TraderPlatform
 from backend.core.monitoring import RobustMonitoringSystem, AlertSeverity
 from backend.core.cache_manager import CacheManager
 
 router = APIRouter(prefix="/api", tags=["traders"])
+
+
+class FollowTraderRequest(BaseModel):
+    """Request model for following a trader."""
+
+    name: str
+    platform: str
+    username: str
+    verified: bool = False
 
 
 @router.get("/trader-signals", response_model=List[TraderSignal])
@@ -183,4 +193,61 @@ async def get_alerts(
         raise HTTPException(
             status_code=500,
             detail=f"Error fetching alerts: {str(e)}. Please try again later.",
+        )
+
+
+@router.post("/traders/follow")
+async def follow_trader(
+    request: FollowTraderRequest,
+    system: TraderFollowingSystem = Depends(get_trader_system),
+):
+    """Follow a new trader."""
+    try:
+        # Map platform string to TraderPlatform enum
+        platform_map = {
+            "twitter": TraderPlatform.TWITTER,
+            "reddit": TraderPlatform.REDDIT,
+            "discord": TraderPlatform.DISCORD,
+        }
+
+        platform = platform_map.get(request.platform.lower(), TraderPlatform.TWITTER)
+
+        # Add trader to the system
+        trader_id = system.add_trader(
+            name=request.name,
+            platform=platform,
+            username=request.username,
+            verified=request.verified,
+        )
+
+        return {
+            "success": True,
+            "trader_id": trader_id,
+            "message": f"Successfully followed {request.name}",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error following trader: {str(e)}",
+        )
+
+
+@router.delete("/traders/{trader_id}")
+async def unfollow_trader(
+    trader_id: str,
+    system: TraderFollowingSystem = Depends(get_trader_system),
+):
+    """Unfollow a trader."""
+    try:
+        # Remove trader from the system
+        system.remove_trader(trader_id)
+
+        return {
+            "success": True,
+            "message": f"Successfully unfollowed trader",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error unfollowing trader: {str(e)}",
         )
