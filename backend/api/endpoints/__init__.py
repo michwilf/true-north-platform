@@ -6,6 +6,7 @@ from .traders import router as traders_router
 from .portfolio import router as portfolio_router
 from .analysis import router as analysis_router
 from .autonomous import router as autonomous_router
+from .enhanced_opportunities import router as enhanced_opportunities_router
 
 __all__ = [
     "market_router",
@@ -14,4 +15,5 @@ __all__ = [
     "portfolio_router",
     "analysis_router",
     "autonomous_router",
+    "enhanced_opportunities_router",
 ]
