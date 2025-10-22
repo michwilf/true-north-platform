@@ -324,7 +324,6 @@ orjson==3.10.16
 ormsgpack==1.10.0
 overrides==7.7.0
 packaging==24.2
--e git+https://github.com/Palate-AI/palate-backend-service.git@6acd45d288c4b1085fac5d3949c02c17ab321e96#egg=palate_taste_engine
 pandas==2.3.3
 pandocfilters==1.5.1
 parsel==1.10.0
