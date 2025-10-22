@@ -251,3 +251,64 @@ async def unfollow_trader(
             status_code=500,
             detail=f"Error unfollowing trader: {str(e)}",
         )
+
+
+@router.post("/traders/seed-samples")
+async def seed_sample_traders(
+    system: TraderFollowingSystem = Depends(get_trader_system),
+):
+    """Seed the system with sample traders for demonstration purposes."""
+    try:
+        sample_traders = [
+            {
+                "name": "Market Wizard",
+                "platform": "twitter",
+                "username": "marketwizard",
+                "verified": True,
+            },
+            {
+                "name": "Crypto King",
+                "platform": "discord",
+                "username": "cryptoking",
+                "verified": True,
+            },
+            {
+                "name": "Value Hunter",
+                "platform": "reddit",
+                "username": "valuehunter",
+                "verified": False,
+            },
+        ]
+
+        platform_map = {
+            "twitter": TraderPlatform.TWITTER,
+            "reddit": TraderPlatform.REDDIT,
+            "discord": TraderPlatform.DISCORD,
+        }
+
+        added_count = 0
+        for trader_data in sample_traders:
+            try:
+                platform = platform_map.get(
+                    trader_data["platform"].lower(), TraderPlatform.TWITTER
+                )
+                system.add_trader(
+                    name=trader_data["name"],
+                    platform=platform,
+                    username=trader_data["username"],
+                    verified=trader_data["verified"],
+                )
+                added_count += 1
+            except Exception as e:
+                print(f"Error adding {trader_data['name']}: {e}")
+
+        return {
+            "success": True,
+            "message": f"Successfully seeded {added_count} sample traders",
+            "count": added_count,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error seeding sample traders: {str(e)}",
+        )
