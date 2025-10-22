@@ -31,5 +31,5 @@ services:
       - key: PYTHONPATH
         value: "/app"
       - key: CORS_ORIGINS
-        value: "https://frontend-c9jafr23z-athleas-projects.vercel.app,https://frontend-athleas-projects.vercel.app,http://localhost:3002,http://127.0.0.1:3002"
+        value: "https://frontend-p4seollyx-athleas-projects.vercel.app,https://frontend-athleas-projects.vercel.app,https://frontend-c9jafr23z-athleas-projects.vercel.app,http://localhost:3002,http://127.0.0.1:3002"
 
