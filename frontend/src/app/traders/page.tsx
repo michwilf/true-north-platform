@@ -41,7 +41,7 @@ export default function TradersPage() {
   const loadTraders = async () => {
     try {
       setLoadingTraders(true);
-      const response = await fetch("http://localhost:8002/api/traders");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}/api/traders`);
       const data = await response.json();
       setTraders(data);
     } catch (error) {

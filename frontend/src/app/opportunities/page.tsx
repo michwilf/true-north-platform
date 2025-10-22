@@ -128,7 +128,7 @@ export default function OpportunitiesPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8002/api/analyze-stock/${symbol}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}/api/analyze-stock/${symbol}`,
         { method: "POST" }
       );
       const data = await response.json();

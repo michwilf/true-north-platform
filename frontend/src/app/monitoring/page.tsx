@@ -41,7 +41,7 @@ export default function MonitoringPage() {
   const loadAlerts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:8002/api/alerts");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}/api/alerts`);
       const data = await response.json();
       setAlerts(data);
     } catch (error) {

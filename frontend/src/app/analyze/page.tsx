@@ -64,7 +64,7 @@ export default function StockAnalysisPage() {
       setError(null);
 
       const response = await fetch(
-        `http://localhost:8002/api/analyze-stock/${symbol.toUpperCase()}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}/api/analyze-stock/${symbol.toUpperCase()}`,
         {
           method: "POST",
         }
