@@ -30,10 +30,10 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements
-COPY backend/config/requirements.txt ./requirements.txt
+# Copy backend requirements with pinned versions
+COPY backend/config/requirements-lock.txt ./requirements.txt
 
-# Install Python dependencies
+# Install Python dependencies with pinned versions (much faster resolution)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code

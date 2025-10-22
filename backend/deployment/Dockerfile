@@ -12,10 +12,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt config/requirements-enhanced.txt ./
+# Copy requirements with pinned versions
+COPY config/requirements-lock.txt ./requirements.txt
+COPY config/requirements-enhanced.txt ./
 
-# Install Python dependencies
+# Install Python dependencies with pinned versions (much faster resolution)
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir schedule
 
