@@ -68,9 +68,10 @@ cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3002,http://127.0.0.1
 allowed_origins = [origin.strip() for origin in cors_origins.split(",")]
 print(f"🌐 CORS enabled for origins: {allowed_origins}")
 
+# Allow all Vercel deployments with regex
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
