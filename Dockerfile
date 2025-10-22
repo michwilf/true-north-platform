@@ -35,7 +35,8 @@ RUN apt-get update && apt-get install -y \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
     && apt-get update \
     && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && node --version && npm --version
 
 # Copy backend requirements with pinned versions
 COPY backend/config/requirements-lock.txt ./requirements.txt
@@ -54,6 +55,7 @@ COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
 COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
 COPY --from=frontend-builder /app/frontend/package-lock.json ./frontend/package-lock.json
+COPY --from=frontend-builder /app/frontend/next.config.ts ./frontend/next.config.ts
 COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
 
 # Create necessary directories
@@ -72,5 +74,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8002/health || exit 1
 
 # Default command - run both backend and frontend
-CMD ["sh", "-c", "python backend/scripts/runners/run_backend.py & cd frontend && npm start -- --port 3002"]
+CMD ["sh", "-c", "python /app/backend/scripts/runners/run_backend.py & cd /app/frontend && NODE_ENV=production npm start -- --port 3002"]
 
