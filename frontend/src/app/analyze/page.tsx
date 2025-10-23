@@ -151,7 +151,8 @@ export default function StockAnalysisPage() {
           <div className="space-y-6 mb-8">
             {Object.entries(agentTexts).map(([agentName, data], index) => {
               const Icon = agentIcons[agentName] || ChartBarIcon;
-              const colorClass = agentColors[agentName] || "border-gray-500 bg-gray-50";
+              const colorClass =
+                agentColors[agentName] || "border-gray-500 bg-gray-50";
 
               return (
                 <motion.div
@@ -173,7 +174,9 @@ export default function StockAnalysisPage() {
                             {agentName}
                           </h3>
                           <p className="text-sm text-gray-500">
-                            {data.isComplete ? "Analysis complete" : "Analyzing..."}
+                            {data.isComplete
+                              ? "Analysis complete"
+                              : "Analyzing..."}
                           </p>
                         </div>
                       </div>

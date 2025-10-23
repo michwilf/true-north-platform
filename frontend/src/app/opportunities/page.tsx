@@ -81,6 +81,9 @@ export default function OpportunitiesPage() {
   const [loadingAnalysis, setLoadingAnalysis] = useState<
     Record<string, boolean>
   >({});
+  const [analysisProgress, setAnalysisProgress] = useState<
+    Record<string, { currentAgent: string; progress: number }>
+  >({});
   const [expandedSources, setExpandedSources] = useState<
     Record<string, string | null>
   >({}); // { symbol: 'market_analyst' | 'news_analyst' | etc }
@@ -122,22 +125,90 @@ export default function OpportunitiesPage() {
       return;
     }
 
-    // Load analysis
+    // Load analysis with streaming
     setLoadingAnalysis({ ...loadingAnalysis, [symbol]: true });
     setExpandedOpportunity(symbol);
+    setAnalysisProgress({
+      ...analysisProgress,
+      [symbol]: { currentAgent: "Starting...", progress: 0 },
+    });
 
     try {
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"
-        }/api/analyze-stock/${symbol}`,
-        { method: "POST" }
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
+      const eventSource = new EventSource(
+        `${API_URL}/api/analyze-stock-stream/${symbol}`
       );
-      const data = await response.json();
-      setAnalysisData({ ...analysisData, [symbol]: data });
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log(`[${symbol}] Stream event:`, data);
+
+          // Update progress based on event type
+          if (data.event === "start") {
+            setAnalysisProgress((prev) => ({
+              ...prev,
+              [symbol]: {
+                currentAgent: "Multi-agent analysis started",
+                progress: 0,
+              },
+            }));
+          } else if (data.event === "agent_start") {
+            setAnalysisProgress((prev) => ({
+              ...prev,
+              [symbol]: {
+                currentAgent: `Running ${data.agent}...`,
+                progress: data.progress || 0,
+              },
+            }));
+          } else if (data.event === "agent_complete") {
+            setAnalysisProgress((prev) => ({
+              ...prev,
+              [symbol]: {
+                currentAgent: `✓ ${data.agent} complete`,
+                progress: data.progress || 0,
+              },
+            }));
+          } else if (data.event === "synthesis_start") {
+            setAnalysisProgress((prev) => ({
+              ...prev,
+              [symbol]: {
+                currentAgent: "Synthesizing results...",
+                progress: 90,
+              },
+            }));
+          } else if (data.event === "done") {
+            // Analysis complete
+            console.log(`[${symbol}] Analysis complete!`, data);
+            setAnalysisData((prev) => ({ ...prev, [symbol]: data }));
+            setLoadingAnalysis((prev) => ({ ...prev, [symbol]: false }));
+            setAnalysisProgress((prev) => ({
+              ...prev,
+              [symbol]: { currentAgent: "Complete!", progress: 100 },
+            }));
+            eventSource.close();
+          } else if (data.event === "error") {
+            console.error(`[${symbol}] Analysis error:`, data.message);
+            setLoadingAnalysis((prev) => ({ ...prev, [symbol]: false }));
+            eventSource.close();
+          }
+        } catch (err) {
+          console.error("Error parsing stream:", err);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error(`Stream error for ${symbol}:`, error);
+        setLoadingAnalysis((prev) => ({ ...prev, [symbol]: false }));
+        setAnalysisProgress((prev) => ({
+          ...prev,
+          [symbol]: { currentAgent: "Error occurred", progress: 0 },
+        }));
+        eventSource.close();
+      };
     } catch (error) {
       console.error(`Failed to load analysis for ${symbol}:`, error);
-    } finally {
       setLoadingAnalysis({ ...loadingAnalysis, [symbol]: false });
     }
   };
@@ -382,10 +453,39 @@ export default function OpportunitiesPage() {
                         {loadingAnalysis[opportunity.symbol] ? (
                           <div className="text-center py-8">
                             <ArrowPathIcon className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-3" />
-                            <p className="text-gray-600">
+                            <p className="text-gray-600 font-semibold mb-2">
                               Running multi-agent analysis on{" "}
                               {opportunity.symbol}...
                             </p>
+                            {analysisProgress[opportunity.symbol] && (
+                              <>
+                                <div className="max-w-md mx-auto mt-4">
+                                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-blue-600 transition-all duration-300"
+                                      style={{
+                                        width: `${
+                                          analysisProgress[opportunity.symbol]
+                                            .progress
+                                        }%`,
+                                      }}
+                                    />
+                                  </div>
+                                  <p className="text-sm text-gray-500 mt-2">
+                                    {
+                                      analysisProgress[opportunity.symbol]
+                                        .currentAgent
+                                    }
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {analysisProgress[
+                                      opportunity.symbol
+                                    ].progress.toFixed(0)}
+                                    % complete
+                                  </p>
+                                </div>
+                              </>
+                            )}
                           </div>
                         ) : analysisData[opportunity.symbol] ? (
                           <div className="space-y-6">
