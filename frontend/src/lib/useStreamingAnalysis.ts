@@ -83,7 +83,11 @@ export function useStreamingAnalysis(
               if (data.agent) {
                 setAgentTexts((prev) => ({
                   ...prev,
-                  [data.agent!]: { agent: data.agent!, text: "", isComplete: false },
+                  [data.agent!]: {
+                    agent: data.agent!,
+                    text: "",
+                    isComplete: false,
+                  },
                 }));
               }
               break;
@@ -98,7 +102,7 @@ export function useStreamingAnalysis(
                     isComplete: false,
                   },
                 }));
-                
+
                 // If it's synthesis, also update synthesis text
                 if (data.agent === "Investment Synthesizer") {
                   setSynthesisText((prev) => prev + data.chunk);

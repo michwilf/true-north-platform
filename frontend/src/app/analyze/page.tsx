@@ -7,413 +7,284 @@ import {
   UserGroupIcon,
   NewspaperIcon,
   CalculatorIcon,
-  ShieldCheckIcon,
   ArrowPathIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import { useStockAnalysisStreamText } from "@/lib/useStreamingAnalysis";
+import StreamingMarkdown from "@/components/StreamingMarkdown";
+import StreamingProgress from "@/components/StreamingProgress";
 
-interface AgentAnalysis {
-  recommendation: string;
-  confidence: number;
-  reasoning: string;
-  key_metrics?: Record<string, number>;
-  sentiment_score?: number;
-  news_count?: number;
-  key_headlines?: string[];
-  assessment?: string;
-  position_size?: number;
-  risk_factors?: string[];
-}
+const agentIcons: Record<string, any> = {
+  "Market Analyst": ChartBarIcon,
+  "Social Analyst": UserGroupIcon,
+  "News Analyst": NewspaperIcon,
+  "Fundamentals Analyst": CalculatorIcon,
+  "Investment Synthesizer": SparklesIcon,
+};
 
-interface StockAnalysis {
-  symbol: string;
-  analysis_timestamp: string;
-  overall_recommendation: string;
-  confidence: number;
-  target_price: number;
-  stop_loss: number;
-  agents: {
-    market_analyst: AgentAnalysis;
-    news_analyst: AgentAnalysis;
-    fundamentals_analyst: AgentAnalysis;
-    risk_manager: AgentAnalysis;
-  };
-  debate_summary: string;
-  price_targets: {
-    bull_case: number;
-    base_case: number;
-    bear_case: number;
-  };
-}
+const agentColors: Record<string, string> = {
+  "Market Analyst": "border-blue-500 bg-blue-50",
+  "Social Analyst": "border-green-500 bg-green-50",
+  "News Analyst": "border-purple-500 bg-purple-50",
+  "Fundamentals Analyst": "border-orange-500 bg-orange-50",
+  "Investment Synthesizer": "border-indigo-500 bg-indigo-50",
+};
 
 export default function StockAnalysisPage() {
-  const [symbol, setSymbol] = useState("");
-  const [analysis, setAnalysis] = useState<StockAnalysis | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [inputSymbol, setInputSymbol] = useState("");
+  const [symbol, setSymbol] = useState<string | null>(null);
 
-  const analyzeStock = async () => {
-    if (!symbol.trim()) return;
+  const {
+    isStreaming,
+    progress,
+    currentAgent,
+    agentTexts,
+    synthesisText,
+    finalData,
+    error,
+  } = useStockAnalysisStreamText(symbol);
 
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"
-        }/api/analyze-stock/${symbol.toUpperCase()}`,
-        {
-          method: "POST",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to analyze stock");
-      }
-
-      const data = await response.json();
-      setAnalysis(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed");
-    } finally {
-      setLoading(false);
-    }
+  const startAnalysis = () => {
+    if (!inputSymbol.trim()) return;
+    setSymbol(inputSymbol.toUpperCase());
   };
 
-  const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation.toUpperCase()) {
+  const getRecommendationStyle = (rec: string) => {
+    switch (rec?.toUpperCase()) {
       case "BUY":
       case "STRONG_BUY":
-        return "text-green-600 bg-green-50 border-green-200";
+        return "bg-green-500 text-white";
       case "SELL":
       case "STRONG_SELL":
-        return "text-red-600 bg-red-50 border-red-200";
+        return "bg-red-500 text-white";
       case "HOLD":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+        return "bg-yellow-500 text-white";
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
-    }
-  };
-
-  const getRecommendationIcon = (recommendation: string) => {
-    switch (recommendation.toUpperCase()) {
-      case "BUY":
-      case "STRONG_BUY":
-        return <ArrowTrendingUpIcon className="h-5 w-5 text-green-600" />;
-      case "SELL":
-      case "STRONG_SELL":
-        return <ArrowTrendingDownIcon className="h-5 w-5 text-red-600" />;
-      default:
-        return <CheckCircleIcon className="h-5 w-5 text-yellow-600" />;
-    }
-  };
-
-  const getAgentIcon = (agentType: string) => {
-    switch (agentType) {
-      case "market_analyst":
-        return <ChartBarIcon className="h-6 w-6 text-blue-600" />;
-      case "news_analyst":
-        return <NewspaperIcon className="h-6 w-6 text-purple-600" />;
-      case "fundamentals_analyst":
-        return <CalculatorIcon className="h-6 w-6 text-green-600" />;
-      case "risk_manager":
-        return <ShieldCheckIcon className="h-6 w-6 text-orange-600" />;
-      default:
-        return <UserGroupIcon className="h-6 w-6 text-gray-600" />;
-    }
-  };
-
-  const getAgentTitle = (agentType: string) => {
-    switch (agentType) {
-      case "market_analyst":
-        return "Market Analyst";
-      case "news_analyst":
-        return "News Analyst";
-      case "fundamentals_analyst":
-        return "Fundamentals Analyst";
-      case "risk_manager":
-        return "Risk Manager";
-      default:
-        return agentType
-          .replace("_", " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase());
+        return "bg-gray-500 text-white";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Stock Analysis</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              AI-powered multi-agent analysis with transparent reasoning
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            📊 Multi-Agent Stock Analysis
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Watch AI agents analyze stocks in real-time with streaming text
+          </p>
+        </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <label
-                htmlFor="symbol"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Stock Symbol
-              </label>
-              <div className="relative">
-                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  id="symbol"
-                  value={symbol}
-                  onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-                  onKeyPress={(e) => e.key === "Enter" && analyzeStock()}
-                  placeholder="Enter symbol (e.g., AAPL, TSLA, MSFT)"
-                  className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                />
-              </div>
+        {/* Search Input */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-2xl shadow-lg p-6 mb-8"
+        >
+          <div className="flex gap-4">
+            <div className="flex-1 relative">
+              <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                value={inputSymbol}
+                onChange={(e) => setInputSymbol(e.target.value.toUpperCase())}
+                onKeyPress={(e) => e.key === "Enter" && startAnalysis()}
+                placeholder="Enter stock symbol (e.g., AAPL, MSFT, GOOGL)"
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none transition-colors"
+                disabled={isStreaming}
+              />
             </div>
-            <div className="pt-6">
-              <button
-                onClick={analyzeStock}
-                disabled={loading || !symbol.trim()}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {loading ? (
-                  <ArrowPathIcon className="h-5 w-5 mr-2 animate-spin" />
-                ) : (
-                  <ChartBarIcon className="h-5 w-5 mr-2" />
-                )}
-                {loading ? "Analyzing..." : "Analyze Stock"}
-              </button>
-            </div>
+            <button
+              onClick={startAnalysis}
+              disabled={isStreaming || !inputSymbol.trim()}
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+            >
+              {isStreaming ? (
+                <div className="flex items-center gap-2">
+                  <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                  Analyzing...
+                </div>
+              ) : (
+                "Analyze"
+              )}
+            </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Error State */}
+        {/* Progress Bar */}
+        {isStreaming && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-8"
+          >
+            <StreamingProgress
+              progress={progress}
+              currentAgent={currentAgent}
+              agents={Object.keys(agentTexts)}
+            />
+          </motion.div>
+        )}
+
+        {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <div className="flex items-center">
-              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
-              <p className="text-red-800">{error}</p>
-            </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-8"
+          >
+            <p className="text-red-600 font-medium">❌ {error}</p>
+          </motion.div>
+        )}
+
+        {/* Agent Analysis Cards - Streaming */}
+        {Object.keys(agentTexts).length > 0 && (
+          <div className="space-y-6 mb-8">
+            {Object.entries(agentTexts).map(([agentName, data], index) => {
+              const Icon = agentIcons[agentName] || ChartBarIcon;
+              const colorClass = agentColors[agentName] || "border-gray-500 bg-gray-50";
+
+              return (
+                <motion.div
+                  key={agentName}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-white rounded-2xl shadow-lg border-l-4 ${colorClass} overflow-hidden`}
+                >
+                  <div className="p-6">
+                    {/* Agent Header */}
+                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${colorClass}`}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {agentName}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {data.isComplete ? "Analysis complete" : "Analyzing..."}
+                          </p>
+                        </div>
+                      </div>
+                      {data.isComplete && (
+                        <CheckCircleIcon className="h-8 w-8 text-green-500" />
+                      )}
+                    </div>
+
+                    {/* Streaming Text with Markdown */}
+                    <StreamingMarkdown
+                      content={data.text}
+                      isStreaming={!data.isComplete}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
-        {/* Analysis Results */}
-        {analysis && (
-          <div className="space-y-8">
-            {/* Overall Recommendation */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {analysis.symbol}
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    Analysis completed:{" "}
-                    {new Date(analysis.analysis_timestamp).toLocaleString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div
-                    className={`inline-flex items-center px-4 py-2 rounded-full border font-semibold ${getRecommendationColor(
-                      analysis.overall_recommendation
-                    )}`}
-                  >
-                    {getRecommendationIcon(analysis.overall_recommendation)}
-                    <span className="ml-2">
-                      {analysis.overall_recommendation}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {(analysis.confidence * 100).toFixed(0)}% confidence
-                  </p>
-                </div>
+        {/* Synthesis Section */}
+        {synthesisText && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-lg border-2 border-indigo-300 p-8 mb-8"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-indigo-100 rounded-lg">
+                <SparklesIcon className="h-8 w-8 text-indigo-600" />
               </div>
-
-              {/* Price Targets */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-green-50 rounded-lg p-4 text-center">
-                  <p className="text-sm text-green-600 font-medium mb-1">
-                    Bull Case
-                  </p>
-                  <p className="text-2xl font-bold text-green-900">
-                    ${analysis.price_targets.bull_case.toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <p className="text-sm text-blue-600 font-medium mb-1">
-                    Base Case
-                  </p>
-                  <p className="text-2xl font-bold text-blue-900">
-                    ${analysis.price_targets.base_case.toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-red-50 rounded-lg p-4 text-center">
-                  <p className="text-sm text-red-600 font-medium mb-1">
-                    Bear Case
-                  </p>
-                  <p className="text-2xl font-bold text-red-900">
-                    ${analysis.price_targets.bear_case.toFixed(2)}
-                  </p>
-                </div>
+              <div>
+                <h2 className="text-2xl font-bold text-indigo-900">
+                  Investment Synthesis
+                </h2>
+                <p className="text-indigo-600">
+                  Final recommendation based on all agent analyses
+                </p>
               </div>
-
-              {/* Key Levels */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 font-medium mb-1">
-                    Target Price
-                  </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    ${analysis.target_price.toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 font-medium mb-1">
-                    Stop Loss
-                  </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    ${analysis.stop_loss.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Agent Analysis */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {Object.entries(analysis.agents).map(
-                ([agentType, agentData], index) => (
-                  <motion.div
-                    key={agentType}
-                    initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        {getAgentIcon(agentType)}
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {getAgentTitle(agentType)}
-                        </h3>
-                      </div>
-                      <div className="text-right">
-                        <div
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getRecommendationColor(
-                            agentData.recommendation
-                          )}`}
-                        >
-                          {agentData.recommendation}
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {(agentData.confidence * 100).toFixed(0)}% confidence
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-700 mb-4">{agentData.reasoning}</p>
-
-                    {/* Agent-specific data */}
-                    {agentData.key_metrics && (
-                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">
-                          Key Metrics
-                        </p>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          {Object.entries(agentData.key_metrics).map(
-                            ([key, value]) => (
-                              <div key={key} className="flex justify-between">
-                                <span className="text-gray-600">
-                                  {key.replace("_", " ").toUpperCase()}:
-                                </span>
-                                <span className="font-medium">
-                                  {typeof value === "number"
-                                    ? value.toFixed(2)
-                                    : value}
-                                </span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {agentData.key_headlines && (
-                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">
-                          Key Headlines ({agentData.news_count} articles)
-                        </p>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                          {agentData.key_headlines.map((headline, idx) => (
-                            <li key={idx} className="flex items-start">
-                              <span className="text-blue-600 mr-2">•</span>
-                              {headline}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {agentData.risk_factors && (
-                      <div className="bg-orange-50 rounded-lg p-3">
-                        <p className="text-sm font-medium text-orange-700 mb-2">
-                          Risk Factors
-                        </p>
-                        <ul className="text-sm text-orange-600 space-y-1">
-                          {agentData.risk_factors.map((factor, idx) => (
-                            <li key={idx} className="flex items-start">
-                              <ExclamationTriangleIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                              {factor}
-                            </li>
-                          ))}
-                        </ul>
-                        {agentData.position_size && (
-                          <p className="text-sm text-orange-700 mt-2 font-medium">
-                            Recommended position size:{" "}
-                            {(agentData.position_size * 100).toFixed(0)}%
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </motion.div>
-                )
-              )}
             </div>
 
-            {/* Debate Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-            >
-              <div className="flex items-center space-x-3 mb-4">
-                <UserGroupIcon className="h-6 w-6 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Agent Debate Summary
-                </h3>
+            <StreamingMarkdown
+              content={synthesisText}
+              isStreaming={isStreaming && currentAgent === "Synthesis"}
+              className="bg-white rounded-xl p-6"
+            />
+          </motion.div>
+        )}
+
+        {/* Final Results */}
+        {finalData && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className={`rounded-2xl shadow-2xl p-8 ${getRecommendationStyle(
+              finalData.recommendation
+            )}`}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">
+                  Final Recommendation: {finalData.recommendation}
+                </h2>
+                <p className="text-xl opacity-90">
+                  Confidence: {(finalData.confidence * 100).toFixed(1)}%
+                </p>
               </div>
-              <p className="text-gray-700 leading-relaxed">
-                {analysis.debate_summary}
-              </p>
-            </motion.div>
-          </div>
+              <CheckCircleIcon className="h-16 w-16" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white/20 backdrop-blur rounded-xl p-4">
+                <p className="text-sm opacity-90 mb-1">Current Price</p>
+                <p className="text-2xl font-bold">
+                  ${finalData.current_price?.toFixed(2) || "N/A"}
+                </p>
+              </div>
+              <div className="bg-white/20 backdrop-blur rounded-xl p-4">
+                <p className="text-sm opacity-90 mb-1">Target Price</p>
+                <p className="text-2xl font-bold">
+                  ${finalData.target_price?.toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-white/20 backdrop-blur rounded-xl p-4">
+                <p className="text-sm opacity-90 mb-1">Stop Loss</p>
+                <p className="text-2xl font-bold">
+                  ${finalData.stop_loss?.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Empty State */}
+        {!isStreaming && !finalData && !error && symbol === null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-center py-20"
+          >
+            <ChartBarIcon className="h-24 w-24 text-gray-300 mx-auto mb-6" />
+            <h3 className="text-2xl font-semibold text-gray-600 mb-3">
+              Enter a stock symbol to begin analysis
+            </h3>
+            <p className="text-gray-500">
+              Watch 4 AI agents analyze stocks with streaming text in real-time
+            </p>
+          </motion.div>
         )}
       </div>
     </div>
