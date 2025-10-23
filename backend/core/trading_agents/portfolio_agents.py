@@ -23,24 +23,26 @@ class PortfolioManagerAgent:
             api_key=os.getenv("OPENAI_API_KEY"),
         )
 
-    async def analyze(self, portfolio_data: Dict[str, Any], market_regime: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def analyze(
+        self, portfolio_data: Dict[str, Any], market_regime: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Analyze portfolio allocation and provide recommendations.
-        
+
         Args:
             portfolio_data: Portfolio metrics and positions
             market_regime: Optional market regime context
-            
+
         Returns:
             Dict with portfolio analysis and recommendations
         """
-        
+
         # Extract positions for analysis
-        positions = portfolio_data.get('positions', [])
-        
+        positions = portfolio_data.get("positions", [])
+
         # Calculate sector exposure
         sector_exposure = self._calculate_sector_exposure(positions)
-        
+
         prompt = f"""You are a senior portfolio manager analyzing a client's investment portfolio.
 
 CURRENT PORTFOLIO:
@@ -94,10 +96,14 @@ Be SPECIFIC with position names, target prices, and percentages.
 Provide CONCRETE recommendations, not generic advice.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a senior portfolio manager with 20 years experience in portfolio construction, allocation, and optimization."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a senior portfolio manager with 20 years experience in portfolio construction, allocation, and optimization."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         analysis_text = response.content
 
@@ -113,55 +119,60 @@ Provide CONCRETE recommendations, not generic advice.
     def _calculate_sector_exposure(self, positions: List[Any]) -> Dict[str, float]:
         """Calculate sector exposure percentages."""
         sector_map = {
-            'AAPL': 'Technology',
-            'MSFT': 'Technology',
-            'GOOGL': 'Technology',
-            'AMZN': 'Consumer Discretionary',
-            'TSLA': 'Consumer Discretionary',
-            'NVDA': 'Technology',
-            'META': 'Communication Services',
-            'JPM': 'Financials',
-            'V': 'Financials',
-            'JNJ': 'Healthcare',
-            'UNH': 'Healthcare',
-            'XOM': 'Energy',
-            'PG': 'Consumer Staples',
-            'KO': 'Consumer Staples',
+            "AAPL": "Technology",
+            "MSFT": "Technology",
+            "GOOGL": "Technology",
+            "AMZN": "Consumer Discretionary",
+            "TSLA": "Consumer Discretionary",
+            "NVDA": "Technology",
+            "META": "Communication Services",
+            "JPM": "Financials",
+            "V": "Financials",
+            "JNJ": "Healthcare",
+            "UNH": "Healthcare",
+            "XOM": "Energy",
+            "PG": "Consumer Staples",
+            "KO": "Consumer Staples",
         }
-        
+
         sector_values = {}
         total_value = 0
-        
+
         for pos in positions:
-            symbol = pos.symbol if hasattr(pos, 'symbol') else ''
-            value = pos.position_value if hasattr(pos, 'position_value') else 0
-            sector = sector_map.get(symbol, 'Other')
-            
+            symbol = pos.symbol if hasattr(pos, "symbol") else ""
+            value = pos.position_value if hasattr(pos, "position_value") else 0
+            sector = sector_map.get(symbol, "Other")
+
             sector_values[sector] = sector_values.get(sector, 0) + value
             total_value += value
-        
+
         # Convert to percentages
         if total_value > 0:
-            return {sector: round((value / total_value) * 100, 1) for sector, value in sector_values.items()}
+            return {
+                sector: round((value / total_value) * 100, 1)
+                for sector, value in sector_values.items()
+            }
         return {}
 
     def _format_positions(self, positions: List[Any]) -> str:
         """Format positions for prompt."""
         if not positions:
             return "No positions found"
-        
+
         lines = []
         for pos in positions:
-            symbol = pos.symbol if hasattr(pos, 'symbol') else 'N/A'
-            qty = pos.shares if hasattr(pos, 'shares') else 0
-            entry = pos.entry_price if hasattr(pos, 'entry_price') else 0
-            current = pos.current_price if hasattr(pos, 'current_price') else 0
+            symbol = pos.symbol if hasattr(pos, "symbol") else "N/A"
+            qty = pos.shares if hasattr(pos, "shares") else 0
+            entry = pos.entry_price if hasattr(pos, "entry_price") else 0
+            current = pos.current_price if hasattr(pos, "current_price") else 0
             pnl = ((current - entry) / entry * 100) if entry > 0 else 0
-            value = pos.position_value if hasattr(pos, 'position_value') else 0
-            
-            lines.append(f"  • {symbol}: {qty} shares @ ${current:.2f} (entry ${entry:.2f}) | P&L: {pnl:+.2f}% | Value: ${value:,.2f}")
-        
-        return '\n'.join(lines[:10])  # Limit to top 10 positions
+            value = pos.position_value if hasattr(pos, "position_value") else 0
+
+            lines.append(
+                f"  • {symbol}: {qty} shares @ ${current:.2f} (entry ${entry:.2f}) | P&L: {pnl:+.2f}% | Value: ${value:,.2f}"
+            )
+
+        return "\n".join(lines[:10])  # Limit to top 10 positions
 
     def _format_market_regime(self, regime: Dict[str, Any]) -> str:
         """Format market regime for context."""
@@ -173,31 +184,41 @@ VIX: {regime.get('vix_level', 'N/A')}"""
     def _extract_grade(self, text: str) -> str:
         """Try to extract portfolio grade from analysis."""
         grade_keywords = {
-            'A': ['excellent', 'exceptional', 'grade a'],
-            'B': ['good', 'solid', 'grade b'],
-            'C': ['average', 'adequate', 'grade c'],
-            'D': ['poor', 'needs work', 'grade d'],
-            'F': ['failing', 'critical', 'grade f']
+            "A": ["excellent", "exceptional", "grade a"],
+            "B": ["good", "solid", "grade b"],
+            "C": ["average", "adequate", "grade c"],
+            "D": ["poor", "needs work", "grade d"],
+            "F": ["failing", "critical", "grade f"],
         }
-        
+
         text_lower = text.lower()
         for grade, keywords in grade_keywords.items():
             if any(keyword in text_lower for keyword in keywords):
                 return grade
-        
-        return 'B'  # Default to B
+
+        return "B"  # Default to B
 
     def _extract_recommendations(self, text: str) -> List[str]:
         """Extract key recommendations from analysis."""
         recs = []
-        lines = text.split('\n')
-        
+        lines = text.split("\n")
+
         for i, line in enumerate(lines):
-            if any(keyword in line.lower() for keyword in ['recommend', 'should', 'consider', 'trim', 'add', 'sell']):
-                clean_line = line.strip().lstrip('0123456789.-•*) ').strip()
+            if any(
+                keyword in line.lower()
+                for keyword in [
+                    "recommend",
+                    "should",
+                    "consider",
+                    "trim",
+                    "add",
+                    "sell",
+                ]
+            ):
+                clean_line = line.strip().lstrip("0123456789.-•*) ").strip()
                 if clean_line and len(clean_line) > 20:
                     recs.append(clean_line)
-                    
+
         return recs[:5]  # Top 5 recommendations
 
 
@@ -214,21 +235,23 @@ class RiskAnalystAgent:
             api_key=os.getenv("OPENAI_API_KEY"),
         )
 
-    async def analyze(self, portfolio_data: Dict[str, Any], positions: List[Dict]) -> Dict[str, Any]:
+    async def analyze(
+        self, portfolio_data: Dict[str, Any], positions: List[Dict]
+    ) -> Dict[str, Any]:
         """
         Analyze portfolio risk metrics.
-        
+
         Args:
             portfolio_data: Portfolio metrics
             positions: List of positions
-            
+
         Returns:
             Dict with risk analysis
         """
-        
+
         # Calculate concentration metrics
         concentration = self._calculate_concentration(positions)
-        
+
         prompt = f"""You are a portfolio risk analyst specializing in risk management and position analysis.
 
 PORTFOLIO RISK METRICS:
@@ -275,10 +298,14 @@ Provide CONCRETE risk levels and mitigation steps.
 Be direct about what's risky and needs action.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a portfolio risk analyst with expertise in VAR, correlation analysis, and risk management."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a portfolio risk analyst with expertise in VAR, correlation analysis, and risk management."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         analysis_text = response.content
 
@@ -295,55 +322,70 @@ Be direct about what's risky and needs action.
         """Calculate concentration metrics."""
         if not positions:
             return {
-                'largest_position': 'N/A',
-                'largest_position_pct': 0,
-                'top3_concentration': 0,
+                "largest_position": "N/A",
+                "largest_position_pct": 0,
+                "top3_concentration": 0,
             }
-        
+
         # Sort by value
-        sorted_positions = sorted(positions, key=lambda x: x.position_value if hasattr(x, 'position_value') else 0, reverse=True)
-        total_value = sum(p.position_value if hasattr(p, 'position_value') else 0 for p in positions)
-        
+        sorted_positions = sorted(
+            positions,
+            key=lambda x: x.position_value if hasattr(x, "position_value") else 0,
+            reverse=True,
+        )
+        total_value = sum(
+            p.position_value if hasattr(p, "position_value") else 0 for p in positions
+        )
+
         if total_value == 0:
             return {
-                'largest_position': 'N/A',
-                'largest_position_pct': 0,
-                'top3_concentration': 0,
+                "largest_position": "N/A",
+                "largest_position_pct": 0,
+                "top3_concentration": 0,
             }
-        
+
         largest = sorted_positions[0]
-        largest_value = largest.position_value if hasattr(largest, 'position_value') else 0
+        largest_value = (
+            largest.position_value if hasattr(largest, "position_value") else 0
+        )
         largest_pct = (largest_value / total_value) * 100
-        
-        top3_value = sum(p.position_value if hasattr(p, 'position_value') else 0 for p in sorted_positions[:3])
+
+        top3_value = sum(
+            p.position_value if hasattr(p, "position_value") else 0
+            for p in sorted_positions[:3]
+        )
         top3_pct = (top3_value / total_value) * 100
-        
+
         return {
-            'largest_position': largest.symbol if hasattr(largest, 'symbol') else 'N/A',
-            'largest_position_pct': largest_pct,
-            'top3_concentration': top3_pct,
+            "largest_position": largest.symbol if hasattr(largest, "symbol") else "N/A",
+            "largest_position_pct": largest_pct,
+            "top3_concentration": top3_pct,
         }
 
     def _format_positions_risk(self, positions: List[Any]) -> str:
         """Format positions for risk analysis."""
         if not positions:
             return "No positions found"
-        
+
         lines = []
         for pos in positions:
-            symbol = pos.symbol if hasattr(pos, 'symbol') else 'N/A'
-            value = pos.position_value if hasattr(pos, 'position_value') else 0
-            pnl = pos.unrealized_pnl_percent if hasattr(pos, 'unrealized_pnl_percent') else 0
-            
+            symbol = pos.symbol if hasattr(pos, "symbol") else "N/A"
+            value = pos.position_value if hasattr(pos, "position_value") else 0
+            pnl = (
+                pos.unrealized_pnl_percent
+                if hasattr(pos, "unrealized_pnl_percent")
+                else 0
+            )
+
             lines.append(f"  • {symbol}: ${value:,.2f} | P&L: {pnl:+.2f}%")
-        
-        return '\n'.join(lines[:10])
+
+        return "\n".join(lines[:10])
 
     def _assess_risk_level(self, concentration: Dict[str, Any]) -> str:
         """Assess overall portfolio risk level."""
-        largest_pct = concentration['largest_position_pct']
-        top3_pct = concentration['top3_concentration']
-        
+        largest_pct = concentration["largest_position_pct"]
+        top3_pct = concentration["top3_concentration"]
+
         if largest_pct > 30 or top3_pct > 70:
             return "HIGH RISK"
         elif largest_pct > 20 or top3_pct > 60:
@@ -356,15 +398,15 @@ Be direct about what's risky and needs action.
     def _extract_risk_factors(self, text: str) -> List[str]:
         """Extract risk factors from analysis."""
         factors = []
-        if 'concentration' in text.lower():
+        if "concentration" in text.lower():
             factors.append("Concentration risk present")
-        if 'volatile' in text.lower() or 'volatility' in text.lower():
+        if "volatile" in text.lower() or "volatility" in text.lower():
             factors.append("Volatility concerns")
-        if 'correlated' in text.lower():
+        if "correlated" in text.lower():
             factors.append("Correlation risk")
-        if 'stop' in text.lower():
+        if "stop" in text.lower():
             factors.append("Stop-loss management needed")
-        
+
         return factors[:5]
 
 
@@ -381,21 +423,23 @@ class PerformanceAnalystAgent:
             api_key=os.getenv("OPENAI_API_KEY"),
         )
 
-    async def analyze(self, portfolio_data: Dict[str, Any], positions: List[Dict]) -> Dict[str, Any]:
+    async def analyze(
+        self, portfolio_data: Dict[str, Any], positions: List[Dict]
+    ) -> Dict[str, Any]:
         """
         Analyze portfolio performance.
-        
+
         Args:
             portfolio_data: Portfolio metrics
             positions: List of positions
-            
+
         Returns:
             Dict with performance analysis
         """
-        
+
         # Calculate performance metrics
         winners_losers = self._identify_winners_losers(positions)
-        
+
         prompt = f"""You are a portfolio performance analyst specializing in performance attribution and benchmarking.
 
 PORTFOLIO PERFORMANCE:
@@ -444,10 +488,14 @@ Be SPECIFIC with position names and recommended actions.
 Provide CONCRETE guidance on what to do with each position.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a portfolio performance analyst with expertise in performance attribution, benchmarking, and trade analysis."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a portfolio performance analyst with expertise in performance attribution, benchmarking, and trade analysis."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         analysis_text = response.content
 
@@ -463,44 +511,46 @@ Provide CONCRETE guidance on what to do with each position.
     def _identify_winners_losers(self, positions: List[Any]) -> Dict[str, List[Any]]:
         """Identify top winners and losers."""
         if not positions:
-            return {'winners': [], 'losers': []}
-        
+            return {"winners": [], "losers": []}
+
         # Sort by P&L percentage
         sorted_positions = sorted(
-            positions, 
-            key=lambda x: x.unrealized_pnl_percent if hasattr(x, 'unrealized_pnl_percent') else 0,
-            reverse=True
+            positions,
+            key=lambda x: (
+                x.unrealized_pnl_percent if hasattr(x, "unrealized_pnl_percent") else 0
+            ),
+            reverse=True,
         )
-        
+
         winners = sorted_positions[:3]
         losers = sorted_positions[-3:]
-        
-        return {'winners': winners, 'losers': losers}
+
+        return {"winners": winners, "losers": losers}
 
     def _format_performance_list(self, positions: List[Any]) -> str:
         """Format performance list."""
         if not positions:
             return "  None"
-        
+
         lines = []
         for pos in positions:
-            symbol = pos.symbol if hasattr(pos, 'symbol') else 'N/A'
-            entry = pos.entry_price if hasattr(pos, 'entry_price') else 0
-            current = pos.current_price if hasattr(pos, 'current_price') else 0
+            symbol = pos.symbol if hasattr(pos, "symbol") else "N/A"
+            entry = pos.entry_price if hasattr(pos, "entry_price") else 0
+            current = pos.current_price if hasattr(pos, "current_price") else 0
             pnl = ((current - entry) / entry * 100) if entry > 0 else 0
-            
+
             lines.append(f"  • {symbol}: {pnl:+.2f}% (${entry:.2f} → ${current:.2f})")
-        
-        return '\n'.join(lines)
+
+        return "\n".join(lines)
 
     def _rate_performance(self, portfolio_data: Dict[str, Any]) -> str:
         """Rate overall performance."""
-        daily_pnl_pct = portfolio_data.get('daily_pnl_percent', 0)
-        win_rate = portfolio_data.get('win_rate', 0)
-        
+        daily_pnl_pct = portfolio_data.get("daily_pnl_percent", 0)
+        win_rate = portfolio_data.get("win_rate", 0)
+
         # Annualize daily return (roughly)
         annual_estimate = daily_pnl_pct * 252
-        
+
         if annual_estimate > 15 and win_rate > 60:
             return "EXCELLENT"
         elif annual_estimate > 10 and win_rate > 55:
@@ -513,14 +563,13 @@ Provide CONCRETE guidance on what to do with each position.
     def _extract_insights(self, text: str) -> List[str]:
         """Extract key insights."""
         insights = []
-        if 'outperform' in text.lower():
+        if "outperform" in text.lower():
             insights.append("Portfolio outperforming benchmarks")
-        if 'underperform' in text.lower():
+        if "underperform" in text.lower():
             insights.append("Portfolio underperforming benchmarks")
-        if 'take profit' in text.lower():
+        if "take profit" in text.lower():
             insights.append("Profit-taking opportunities identified")
-        if 'cut' in text.lower() or 'sell' in text.lower():
+        if "cut" in text.lower() or "sell" in text.lower():
             insights.append("Loss-cutting recommendations present")
-        
-        return insights[:5]
 
+        return insights[:5]
