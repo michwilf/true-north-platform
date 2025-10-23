@@ -26,7 +26,10 @@ const DEFAULT_AGENTS = [
   { name: "Fundamentals Analyst", color: "orange" },
 ];
 
-const COLOR_MAP: Record<string, { bg: string; text: string; progress: string }> = {
+const COLOR_MAP: Record<
+  string,
+  { bg: string; text: string; progress: string }
+> = {
   blue: {
     bg: "bg-blue-100",
     text: "text-blue-600",
@@ -56,7 +59,9 @@ export default function StreamingProgress({
 }: StreamingProgressProps) {
   const agentConfigs = DEFAULT_AGENTS.slice(0, agents.length);
 
-  const getAgentStatus = (agentName: string): "pending" | "active" | "complete" => {
+  const getAgentStatus = (
+    agentName: string
+  ): "pending" | "active" | "complete" => {
     const currentIndex = agents.indexOf(currentAgent || "");
     const agentIndex = agents.indexOf(agentName);
 
@@ -115,7 +120,9 @@ export default function StreamingProgress({
                 {status === "complete" ? (
                   <CheckCircleIcon className={`h-6 w-6 ${colors.text}`} />
                 ) : status === "active" ? (
-                  <ArrowPathIcon className={`h-6 w-6 ${colors.text} animate-spin`} />
+                  <ArrowPathIcon
+                    className={`h-6 w-6 ${colors.text} animate-spin`}
+                  />
                 ) : (
                   <div className="h-6 w-6 rounded-full border-2 border-gray-300"></div>
                 )}
@@ -151,7 +158,9 @@ export default function StreamingProgress({
               )}
 
               {status === "complete" && (
-                <span className="flex-shrink-0 text-xs text-gray-500">✓ Complete</span>
+                <span className="flex-shrink-0 text-xs text-gray-500">
+                  ✓ Complete
+                </span>
               )}
             </div>
           );
@@ -200,4 +209,3 @@ export function StreamingProgressCompact({
     </div>
   );
 }
-

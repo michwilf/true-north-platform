@@ -6,7 +6,16 @@ import { useState, useEffect, useCallback } from "react";
 
 interface StreamEvent {
   event: string;
+  agent?: string;
+  chunk?: string;
+  progress?: number;
   [key: string]: any;
+}
+
+interface AgentText {
+  agent: string;
+  text: string;
+  isComplete: boolean;
 }
 
 interface UseStreamingOptions {
@@ -15,13 +24,18 @@ interface UseStreamingOptions {
   onError?: (error: string) => void;
 }
 
-export function useStreamingAnalysis(url: string | null, options: UseStreamingOptions = {}) {
+export function useStreamingAnalysis(
+  url: string | null,
+  options: UseStreamingOptions = {}
+) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [events, setEvents] = useState<StreamEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [finalData, setFinalData] = useState<any>(null);
+  const [agentTexts, setAgentTexts] = useState<Record<string, AgentText>>({});
+  const [synthesisText, setSynthesisText] = useState<string>("");
 
   useEffect(() => {
     if (!url) return;
@@ -35,14 +49,18 @@ export function useStreamingAnalysis(url: string | null, options: UseStreamingOp
       setEvents([]);
       setError(null);
       setFinalData(null);
+      setAgentTexts({});
+      setSynthesisText("");
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}${url}`;
+      const apiUrl = `${
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"
+      }${url}`;
       eventSource = new EventSource(apiUrl);
 
       eventSource.onmessage = (event) => {
         try {
           const data: StreamEvent = JSON.parse(event.data);
-          
+
           // Update events list
           setEvents((prev) => [...prev, data]);
 
@@ -61,6 +79,45 @@ export function useStreamingAnalysis(url: string | null, options: UseStreamingOp
               setProgress(data.progress || 0);
               break;
 
+            case "agent_text_start":
+              if (data.agent) {
+                setAgentTexts((prev) => ({
+                  ...prev,
+                  [data.agent!]: { agent: data.agent!, text: "", isComplete: false },
+                }));
+              }
+              break;
+
+            case "agent_text_chunk":
+              if (data.agent && data.chunk) {
+                setAgentTexts((prev) => ({
+                  ...prev,
+                  [data.agent!]: {
+                    agent: data.agent!,
+                    text: (prev[data.agent!]?.text || "") + data.chunk,
+                    isComplete: false,
+                  },
+                }));
+                
+                // If it's synthesis, also update synthesis text
+                if (data.agent === "Investment Synthesizer") {
+                  setSynthesisText((prev) => prev + data.chunk);
+                }
+              }
+              break;
+
+            case "agent_text_complete":
+              if (data.agent) {
+                setAgentTexts((prev) => ({
+                  ...prev,
+                  [data.agent!]: {
+                    ...prev[data.agent!],
+                    isComplete: true,
+                  },
+                }));
+              }
+              break;
+
             case "agent_complete":
               setProgress(data.progress || 0);
               break;
@@ -68,6 +125,7 @@ export function useStreamingAnalysis(url: string | null, options: UseStreamingOp
             case "synthesis_start":
               setCurrentAgent("Synthesis");
               setProgress(90);
+              setSynthesisText("");
               break;
 
             case "done":
@@ -115,6 +173,8 @@ export function useStreamingAnalysis(url: string | null, options: UseStreamingOp
     setEvents([]);
     setError(null);
     setFinalData(null);
+    setAgentTexts({});
+    setSynthesisText("");
   }, []);
 
   return {
@@ -124,15 +184,25 @@ export function useStreamingAnalysis(url: string | null, options: UseStreamingOp
     events,
     error,
     finalData,
+    agentTexts,
+    synthesisText,
     reset,
   };
 }
 
 /**
- * Hook for streaming stock analysis
+ * Hook for streaming stock analysis (progress only)
  */
 export function useStockAnalysisStream(symbol: string | null) {
   const url = symbol ? `/api/analyze-stock-stream/${symbol}` : null;
+  return useStreamingAnalysis(url);
+}
+
+/**
+ * Hook for streaming stock analysis WITH TEXT (like ChatGPT)
+ */
+export function useStockAnalysisStreamText(symbol: string | null) {
+  const url = symbol ? `/api/analyze-stock-stream-text/${symbol}` : null;
   return useStreamingAnalysis(url);
 }
 
@@ -151,4 +221,3 @@ export function usePortfolioAnalysisStream(trigger: boolean) {
   const url = trigger ? "/api/portfolio-analysis-stream" : null;
   return useStreamingAnalysis(url);
 }
-
