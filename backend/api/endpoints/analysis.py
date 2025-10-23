@@ -5,12 +5,13 @@ Handles stock analysis using the TradingAgents multi-agent system.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Dict, Any
 
 from backend.api.models import StockAnalysisResponse, AgentAnalysis
 from backend.api.dependencies import get_trading_agents_graph
 from backend.core.trading_agents.graph.trading_graph import TradingAgentsGraph
+from backend.api.streaming import stream_json_response, stream_multi_agent_analysis
 
 router = APIRouter(prefix="/api", tags=["analysis"])
 
@@ -105,3 +106,34 @@ async def analyze_stock(
             status_code=500,
             detail=f"Error analyzing stock {symbol}: {str(e)}. Please try again later.",
         )
+
+
+@router.get("/analyze-stock-stream/{symbol}")
+async def analyze_stock_stream(
+    symbol: str,
+    graph: TradingAgentsGraph = Depends(get_trading_agents_graph),
+):
+    """
+    Stream stock analysis using Server-Sent Events (SSE).
+    
+    Returns progressive updates as each agent completes its analysis.
+    
+    Events:
+    - start: Analysis beginning
+    - agent_start: Individual agent starting
+    - agent_complete: Individual agent completed
+    - synthesis_start: Synthesis phase
+    - done: Final results
+    - error: Error occurred
+    
+    Usage:
+        const eventSource = new EventSource('/api/analyze-stock-stream/AAPL');
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log(data);
+        };
+    """
+    trade_date = date.today().isoformat()
+    return stream_json_response(
+        stream_multi_agent_analysis(symbol, graph, trade_date)
+    )
