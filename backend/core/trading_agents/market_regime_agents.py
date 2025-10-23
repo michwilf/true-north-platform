@@ -4,7 +4,7 @@ Multi-agent system for deep market environment analysis
 """
 
 from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from typing import Dict, Any, List
 import os
 
