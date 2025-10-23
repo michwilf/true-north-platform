@@ -25,10 +25,10 @@ class MacroEconomistAgent:
     async def analyze(self, regime_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze macroeconomic conditions.
-        
+
         Args:
             regime_data: Raw market regime data (VIX, yields, SPY data)
-            
+
         Returns:
             Dict with macro analysis, confidence, and recommendations
         """
@@ -72,15 +72,23 @@ Keep analysis concise but insightful (300-500 words).
 Provide SPECIFIC, ACTIONABLE insights, not generic statements.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a senior macroeconomist with 20 years experience analyzing Fed policy, interest rates, and market cycles."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a senior macroeconomist with 20 years experience analyzing Fed policy, interest rates, and market cycles."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         analysis_text = response.content
 
         # Extract confidence based on data availability
-        confidence = 0.8 if regime_data.get('yield_10y') and regime_data.get('vix_level') else 0.5
+        confidence = (
+            0.8
+            if regime_data.get("yield_10y") and regime_data.get("vix_level")
+            else 0.5
+        )
 
         return {
             "agent_name": "Macro Economist",
@@ -91,7 +99,7 @@ Provide SPECIFIC, ACTIONABLE insights, not generic statements.
                 "equities": self._parse_equity_allocation(analysis_text),
                 "fixed_income": self._parse_bond_allocation(analysis_text),
                 "cash": self._parse_cash_allocation(analysis_text),
-            }
+            },
         }
 
     def _extract_themes(self, text: str) -> List[str]:
@@ -150,14 +158,16 @@ class MarketTechnicianAgent:
             api_key=os.getenv("OPENAI_API_KEY"),
         )
 
-    async def analyze(self, regime_data: Dict[str, Any], sector_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def analyze(
+        self, regime_data: Dict[str, Any], sector_data: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Analyze technical market conditions.
-        
+
         Args:
             regime_data: Raw market regime data
             sector_data: Optional sector rotation data
-            
+
         Returns:
             Dict with technical analysis and signals
         """
@@ -205,10 +215,14 @@ Keep analysis concise but specific (300-500 words).
 Provide ACTIONABLE technical insights with specific levels.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a veteran market technician with expertise in volatility analysis, market breadth, and price action."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a veteran market technician with expertise in volatility analysis, market breadth, and price action."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         analysis_text = response.content
 
@@ -230,7 +244,7 @@ Provide ACTIONABLE technical insights with specific levels.
 
     def _calculate_trend_strength(self, data: Dict[str, Any]) -> str:
         """Calculate trend strength from regime data."""
-        spy_vs_sma = data.get('spy_vs_sma', 0)
+        spy_vs_sma = data.get("spy_vs_sma", 0)
         if spy_vs_sma > 3:
             return "STRONG UPTREND"
         elif spy_vs_sma > 1:
@@ -244,7 +258,7 @@ Provide ACTIONABLE technical insights with specific levels.
 
     def _assess_volatility(self, data: Dict[str, Any]) -> str:
         """Assess volatility conditions."""
-        vix = data.get('vix_level', 20)
+        vix = data.get("vix_level", 20)
         if vix < 15:
             return "EXTREMELY LOW - Complacency risk"
         elif vix < 20:
@@ -258,17 +272,17 @@ Provide ACTIONABLE technical insights with specific levels.
         """Try to extract support/resistance from text."""
         return {
             "support": "Check analysis for specific levels",
-            "resistance": "Check analysis for specific levels"
+            "resistance": "Check analysis for specific levels",
         }
 
     def _determine_bias(self, data: Dict[str, Any]) -> str:
         """Determine trading bias."""
-        trend = data.get('market_trend', 'UNKNOWN')
-        sentiment = data.get('risk_sentiment', 'NEUTRAL')
-        
-        if trend == 'BULLISH' and sentiment == 'RISK_ON':
+        trend = data.get("market_trend", "UNKNOWN")
+        sentiment = data.get("risk_sentiment", "NEUTRAL")
+
+        if trend == "BULLISH" and sentiment == "RISK_ON":
             return "BULLISH"
-        elif trend == 'BEARISH' or sentiment == 'RISK_OFF':
+        elif trend == "BEARISH" or sentiment == "RISK_OFF":
             return "BEARISH"
         else:
             return "NEUTRAL"
@@ -290,10 +304,10 @@ class SentimentAnalystAgent:
     async def analyze(self, regime_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze market sentiment and positioning.
-        
+
         Args:
             regime_data: Raw market regime data
-            
+
         Returns:
             Dict with sentiment analysis and contrarian signals
         """
@@ -342,10 +356,14 @@ Keep analysis concise but insightful (300-500 words).
 Focus on CONTRARIAN insights and positioning asymmetries.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a market sentiment analyst with expertise in investor psychology, positioning, and contrarian indicators."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a market sentiment analyst with expertise in investor psychology, positioning, and contrarian indicators."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         analysis_text = response.content
 
@@ -367,20 +385,20 @@ Focus on CONTRARIAN insights and positioning asymmetries.
         Calculate sentiment score (0-100).
         0 = Extreme Fear, 100 = Extreme Greed
         """
-        vix = data.get('vix_level', 20)
-        risk_sentiment = data.get('risk_sentiment', 'NEUTRAL')
-        
+        vix = data.get("vix_level", 20)
+        risk_sentiment = data.get("risk_sentiment", "NEUTRAL")
+
         # VIX-based component (inverted)
         vix_score = max(0, min(100, 100 - (vix - 10) * 3))
-        
+
         # Risk sentiment component
-        if risk_sentiment == 'RISK_ON':
+        if risk_sentiment == "RISK_ON":
             risk_score = 70
-        elif risk_sentiment == 'RISK_OFF':
+        elif risk_sentiment == "RISK_OFF":
             risk_score = 30
         else:
             risk_score = 50
-            
+
         # Weighted average
         sentiment = (vix_score * 0.6) + (risk_score * 0.4)
         return round(sentiment, 1)
@@ -409,12 +427,12 @@ Focus on CONTRARIAN insights and positioning asymmetries.
 
     def _assess_crowd_positioning(self, data: Dict[str, Any]) -> str:
         """Assess how the crowd is positioned."""
-        sentiment = data.get('risk_sentiment', 'NEUTRAL')
-        vix = data.get('vix_level', 20)
-        
-        if sentiment == 'RISK_ON' and vix < 15:
+        sentiment = data.get("risk_sentiment", "NEUTRAL")
+        vix = data.get("vix_level", 20)
+
+        if sentiment == "RISK_ON" and vix < 15:
             return "CROWDED LONG - High complacency"
-        elif sentiment == 'RISK_OFF' and vix > 30:
+        elif sentiment == "RISK_OFF" and vix > 30:
             return "CROWDED SHORT - High panic"
         else:
             return "BALANCED - No extreme positioning"
@@ -437,17 +455,17 @@ class MarketRegimeSynthesizer:
         macro_analysis: Dict[str, Any],
         technical_analysis: Dict[str, Any],
         sentiment_analysis: Dict[str, Any],
-        regime_data: Dict[str, Any]
+        regime_data: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
         Synthesize all agent analyses into final recommendations.
-        
+
         Args:
             macro_analysis: From MacroEconomistAgent
             technical_analysis: From MarketTechnicianAgent
             sentiment_analysis: From SentimentAnalystAgent
             regime_data: Raw regime data
-            
+
         Returns:
             Comprehensive market regime report with recommendations
         """
@@ -491,18 +509,22 @@ Synthesize these three perspectives into a cohesive market regime report:
 Keep total synthesis under 400 words but make it HIGHLY ACTIONABLE.
 """
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a Chief Investment Strategist synthesizing market analysis into actionable recommendations."),
-            HumanMessage(content=prompt)
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a Chief Investment Strategist synthesizing market analysis into actionable recommendations."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         synthesis_text = response.content
 
         # Calculate overall confidence (weighted average)
         overall_confidence = (
-            macro_analysis['confidence'] * 0.35 +
-            technical_analysis['confidence'] * 0.35 +
-            sentiment_analysis['confidence'] * 0.30
+            macro_analysis["confidence"] * 0.35
+            + technical_analysis["confidence"] * 0.35
+            + sentiment_analysis["confidence"] * 0.30
         )
 
         return {
@@ -519,56 +541,52 @@ Keep total synthesis under 400 words but make it HIGHLY ACTIONABLE.
 
     def _extract_summary(self, text: str) -> str:
         """Extract executive summary from synthesis."""
-        lines = text.split('\n')
+        lines = text.split("\n")
         for i, line in enumerate(lines):
-            if 'executive summary' in line.lower():
+            if "executive summary" in line.lower():
                 # Get next 2-3 lines
                 summary_lines = []
-                for j in range(i+1, min(i+5, len(lines))):
-                    if lines[j].strip() and not lines[j].strip().startswith('#'):
+                for j in range(i + 1, min(i + 5, len(lines))):
+                    if lines[j].strip() and not lines[j].strip().startswith("#"):
                         summary_lines.append(lines[j].strip())
-                return ' '.join(summary_lines)
+                return " ".join(summary_lines)
         return text[:200] + "..."  # Fallback
 
     def _determine_positioning(
         self,
         macro: Dict[str, Any],
         technical: Dict[str, Any],
-        sentiment: Dict[str, Any]
+        sentiment: Dict[str, Any],
     ) -> str:
         """Determine overall recommended positioning."""
         # Voting system
-        votes = {
-            'OFFENSIVE': 0,
-            'DEFENSIVE': 0,
-            'BALANCED': 0
-        }
-        
+        votes = {"OFFENSIVE": 0, "DEFENSIVE": 0, "BALANCED": 0}
+
         # Macro vote
-        if 'RISK_ON' in str(macro.get('recommended_allocation', '')):
-            votes['OFFENSIVE'] += 1
-        elif 'defensive' in macro.get('analysis', '').lower():
-            votes['DEFENSIVE'] += 1
+        if "RISK_ON" in str(macro.get("recommended_allocation", "")):
+            votes["OFFENSIVE"] += 1
+        elif "defensive" in macro.get("analysis", "").lower():
+            votes["DEFENSIVE"] += 1
         else:
-            votes['BALANCED'] += 1
-            
+            votes["BALANCED"] += 1
+
         # Technical vote
-        if technical.get('trading_bias') == 'BULLISH':
-            votes['OFFENSIVE'] += 1
-        elif technical.get('trading_bias') == 'BEARISH':
-            votes['DEFENSIVE'] += 1
+        if technical.get("trading_bias") == "BULLISH":
+            votes["OFFENSIVE"] += 1
+        elif technical.get("trading_bias") == "BEARISH":
+            votes["DEFENSIVE"] += 1
         else:
-            votes['BALANCED'] += 1
-            
+            votes["BALANCED"] += 1
+
         # Sentiment vote (contrarian)
-        contrarian = sentiment.get('contrarian_signal', '')
-        if 'BULLISH CONTRARIAN' in contrarian:
-            votes['OFFENSIVE'] += 1
-        elif 'BEARISH CONTRARIAN' in contrarian:
-            votes['DEFENSIVE'] += 1
+        contrarian = sentiment.get("contrarian_signal", "")
+        if "BULLISH CONTRARIAN" in contrarian:
+            votes["OFFENSIVE"] += 1
+        elif "BEARISH CONTRARIAN" in contrarian:
+            votes["DEFENSIVE"] += 1
         else:
-            votes['BALANCED'] += 1
-            
+            votes["BALANCED"] += 1
+
         # Return winner
         return max(votes, key=votes.get)
 
@@ -576,19 +594,18 @@ Keep total synthesis under 400 words but make it HIGHLY ACTIONABLE.
         self,
         macro: Dict[str, Any],
         technical: Dict[str, Any],
-        sentiment: Dict[str, Any]
+        sentiment: Dict[str, Any],
     ) -> List[str]:
         """Merge key themes from all agents."""
         themes = []
-        themes.extend(macro.get('key_themes', []))
-        
-        # Add technical theme
-        if technical.get('trend_strength'):
-            themes.append(f"Technical: {technical['trend_strength']}")
-            
-        # Add sentiment theme
-        if sentiment.get('sentiment_label'):
-            themes.append(f"Sentiment: {sentiment['sentiment_label']}")
-            
-        return themes[:6]  # Top 6 themes
+        themes.extend(macro.get("key_themes", []))
 
+        # Add technical theme
+        if technical.get("trend_strength"):
+            themes.append(f"Technical: {technical['trend_strength']}")
+
+        # Add sentiment theme
+        if sentiment.get("sentiment_label"):
+            themes.append(f"Sentiment: {sentiment['sentiment_label']}")
+
+        return themes[:6]  # Top 6 themes
