@@ -297,7 +297,10 @@ function OpportunitiesPage() {
     const [analysisData, setAnalysisData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({});
     const [loadingAnalysis, setLoadingAnalysis] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({});
     const [analysisProgress, setAnalysisProgress] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({});
+    const [agentTexts, setAgentTexts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({});
     const [expandedSources, setExpandedSources] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({}); // { symbol: 'market_analyst' | 'news_analyst' | etc }
+    const [drawerOpen, setDrawerOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [drawerSymbol, setDrawerSymbol] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const filteredOpportunities = opportunities === null || opportunities === void 0 ? void 0 : opportunities.filter((opp)=>{
         if (filter === "all") return true;
         return opp.risk_level.toLowerCase() === filter;
@@ -324,17 +327,18 @@ function OpportunitiesPage() {
         return "text-red-600";
     };
     const loadDetailedAnalysis = async (symbol)=>{
+        // Open drawer
+        setDrawerSymbol(symbol);
+        setDrawerOpen(true);
         if (analysisData[symbol]) {
-            // Already loaded, just toggle
-            setExpandedOpportunity(expandedOpportunity === symbol ? null : symbol);
+            // Already loaded, just show it in drawer
             return;
         }
-        // Load analysis with streaming
+        // Load analysis with TEXT STREAMING
         setLoadingAnalysis({
             ...loadingAnalysis,
             [symbol]: true
         });
-        setExpandedOpportunity(symbol);
         setAnalysisProgress({
             ...analysisProgress,
             [symbol]: {
@@ -342,13 +346,43 @@ function OpportunitiesPage() {
                 progress: 0
             }
         });
+        setAgentTexts((prev)=>({
+                ...prev,
+                [symbol]: {}
+            })); // Initialize empty agent texts
         try {
             const API_URL = ("TURBOPACK compile-time value", "http://localhost:8002") || "http://localhost:8002";
-            const eventSource = new EventSource("".concat(API_URL, "/api/analyze-stock-stream/").concat(symbol));
+            const eventSource = new EventSource("".concat(API_URL, "/api/analyze-stock-stream-text/").concat(symbol));
             eventSource.onmessage = (event)=>{
                 try {
                     const data = JSON.parse(event.data);
-                    /* eslint-disable */ console.log(...oo_oo("1320359859_146_10_146_56_4", "[".concat(symbol, "] Stream event:"), data));
+                    /* eslint-disable */ console.log(...oo_oo("1056888719_155_10_155_56_4", "[".concat(symbol, "] Stream event:"), data));
+                    // Handle REAL-TIME TEXT STREAMING from agents
+                    if (data.event === "agent_text_start") {
+                        /* eslint-disable */ console.log(...oo_oo("1056888719_159_12_159_76_4", "[".concat(symbol, "] 🚀 ").concat(data.agent, " starting to write...")));
+                        setAgentTexts((prev)=>({
+                                ...prev,
+                                [symbol]: {
+                                    ...prev[symbol],
+                                    [data.agent]: ""
+                                }
+                            }));
+                    } else if (data.event === "agent_text_chunk") {
+                        // Stream text word-by-word
+                        /* eslint-disable */ console.log(...oo_oo("1056888719_169_12_169_70_4", "[".concat(symbol, "] 📝 ").concat(data.agent, ": ").concat(data.chunk)));
+                        setAgentTexts((prev)=>{
+                            var _prev_symbol;
+                            return {
+                                ...prev,
+                                [symbol]: {
+                                    ...prev[symbol],
+                                    [data.agent]: (((_prev_symbol = prev[symbol]) === null || _prev_symbol === void 0 ? void 0 : _prev_symbol[data.agent]) || "") + data.chunk
+                                }
+                            };
+                        });
+                    } else if (data.event === "agent_text_complete") {
+                        /* eslint-disable */ console.log(...oo_oo("1056888719_178_12_178_71_4", "[".concat(symbol, "] ✅ ").concat(data.agent, " finished writing")));
+                    }
                     // Update progress based on event type
                     if (data.event === "start") {
                         setAnalysisProgress((prev)=>({
@@ -384,7 +418,7 @@ function OpportunitiesPage() {
                             }));
                     } else if (data.event === "done") {
                         // Analysis complete
-                        /* eslint-disable */ console.log(...oo_oo("1320359859_183_12_183_63_4", "[".concat(symbol, "] Analysis complete!"), data));
+                        /* eslint-disable */ console.log(...oo_oo("1056888719_216_12_216_63_4", "[".concat(symbol, "] Analysis complete!"), data));
                         setAnalysisData((prev)=>({
                                 ...prev,
                                 [symbol]: data
@@ -402,7 +436,7 @@ function OpportunitiesPage() {
                             }));
                         eventSource.close();
                     } else if (data.event === "error") {
-                        /* eslint-disable */ console.error(...oo_tx("1320359859_192_12_192_70_11", "[".concat(symbol, "] Analysis error:"), data.message));
+                        /* eslint-disable */ console.error(...oo_tx("1056888719_225_12_225_70_11", "[".concat(symbol, "] Analysis error:"), data.message));
                         setLoadingAnalysis((prev)=>({
                                 ...prev,
                                 [symbol]: false
@@ -410,11 +444,11 @@ function OpportunitiesPage() {
                         eventSource.close();
                     }
                 } catch (err) {
-                    /* eslint-disable */ console.error(...oo_tx("1320359859_197_10_197_53_11", "Error parsing stream:", err));
+                    /* eslint-disable */ console.error(...oo_tx("1056888719_230_10_230_53_11", "Error parsing stream:", err));
                 }
             };
             eventSource.onerror = (error)=>{
-                /* eslint-disable */ console.error(...oo_tx("1320359859_202_8_202_59_11", "Stream error for ".concat(symbol, ":"), error));
+                /* eslint-disable */ console.error(...oo_tx("1056888719_235_8_235_59_11", "Stream error for ".concat(symbol, ":"), error));
                 setLoadingAnalysis((prev)=>({
                         ...prev,
                         [symbol]: false
@@ -429,7 +463,7 @@ function OpportunitiesPage() {
                 eventSource.close();
             };
         } catch (error) {
-            /* eslint-disable */ console.error(...oo_tx("1320359859_211_6_211_68_11", "Failed to load analysis for ".concat(symbol, ":"), error));
+            /* eslint-disable */ console.error(...oo_tx("1056888719_244_6_244_68_11", "Failed to load analysis for ".concat(symbol, ":"), error));
             setLoadingAnalysis({
                 ...loadingAnalysis,
                 [symbol]: false
@@ -459,7 +493,7 @@ function OpportunitiesPage() {
                                         children: "Trading Opportunities"
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 230,
+                                        lineNumber: 263,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -467,13 +501,13 @@ function OpportunitiesPage() {
                                         children: "AI-discovered investment opportunities with detailed analysis"
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 233,
+                                        lineNumber: 266,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                lineNumber: 229,
+                                lineNumber: 262,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -485,30 +519,30 @@ function OpportunitiesPage() {
                                         className: "h-5 w-5 mr-2 ".concat(loading ? "animate-spin" : "")
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 242,
+                                        lineNumber: 275,
                                         columnNumber: 15
                                     }, this),
                                     loading ? "Discovering..." : "Run Discovery"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                lineNumber: 237,
+                                lineNumber: 270,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                        lineNumber: 228,
+                        lineNumber: 261,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                    lineNumber: 227,
+                    lineNumber: 260,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                lineNumber: 226,
+                lineNumber: 259,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -525,7 +559,7 @@ function OpportunitiesPage() {
                                         className: "h-5 w-5 text-gray-400"
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 256,
+                                        lineNumber: 289,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -545,18 +579,18 @@ function OpportunitiesPage() {
                                                 ]
                                             }, riskLevel, true, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 259,
+                                                lineNumber: 292,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 257,
+                                        lineNumber: 290,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                lineNumber: 255,
+                                lineNumber: 288,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -567,7 +601,7 @@ function OpportunitiesPage() {
                                         children: "Sort by:"
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 276,
+                                        lineNumber: 309,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -580,7 +614,7 @@ function OpportunitiesPage() {
                                                 children: "Score"
                                             }, void 0, false, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 282,
+                                                lineNumber: 315,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -588,35 +622,35 @@ function OpportunitiesPage() {
                                                 children: "Symbol"
                                             }, void 0, false, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 283,
+                                                lineNumber: 316,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 277,
+                                        lineNumber: 310,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                lineNumber: 275,
+                                lineNumber: 308,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                        lineNumber: 254,
+                        lineNumber: 287,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                    lineNumber: 253,
+                    lineNumber: 286,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                lineNumber: 252,
+                lineNumber: 285,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -628,7 +662,7 @@ function OpportunitiesPage() {
                             className: "h-8 w-8 text-blue-600 animate-spin"
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 294,
+                            lineNumber: 327,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -636,13 +670,13 @@ function OpportunitiesPage() {
                             children: "Discovering opportunities..."
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 295,
+                            lineNumber: 328,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                    lineNumber: 293,
+                    lineNumber: 326,
                     columnNumber: 11
                 }, this) : error ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "bg-red-50 border border-red-200 rounded-lg p-6 text-center",
@@ -651,7 +685,7 @@ function OpportunitiesPage() {
                             className: "h-12 w-12 text-red-600 mx-auto mb-3"
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 301,
+                            lineNumber: 334,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -659,7 +693,7 @@ function OpportunitiesPage() {
                             children: "Failed to load opportunities"
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 302,
+                            lineNumber: 335,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -667,13 +701,13 @@ function OpportunitiesPage() {
                             children: error
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 305,
+                            lineNumber: 338,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                    lineNumber: 300,
+                    lineNumber: 333,
                     columnNumber: 11
                 }, this) : filteredOpportunities && filteredOpportunities.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "space-y-4",
@@ -706,7 +740,7 @@ function OpportunitiesPage() {
                                                             children: opportunity.symbol
                                                         }, void 0, false, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 321,
+                                                            lineNumber: 354,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -717,7 +751,7 @@ function OpportunitiesPage() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 324,
+                                                            lineNumber: 357,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -725,13 +759,13 @@ function OpportunitiesPage() {
                                                             children: opportunity.timeframe.toUpperCase()
                                                         }, void 0, false, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 331,
+                                                            lineNumber: 364,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                    lineNumber: 320,
+                                                    lineNumber: 353,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -739,7 +773,7 @@ function OpportunitiesPage() {
                                                     children: opportunity.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                    lineNumber: 335,
+                                                    lineNumber: 368,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -747,7 +781,7 @@ function OpportunitiesPage() {
                                                     children: opportunity.reasoning
                                                 }, void 0, false, {
                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                    lineNumber: 338,
+                                                    lineNumber: 371,
                                                     columnNumber: 21
                                                 }, this),
                                                 (opportunity.entry_price || opportunity.target_price || opportunity.stop_loss) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -761,7 +795,7 @@ function OpportunitiesPage() {
                                                                     children: "Entry Price"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 349,
+                                                                    lineNumber: 382,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -772,13 +806,13 @@ function OpportunitiesPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 352,
+                                                                    lineNumber: 385,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 348,
+                                                            lineNumber: 381,
                                                             columnNumber: 27
                                                         }, this),
                                                         opportunity.target_price && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -789,7 +823,7 @@ function OpportunitiesPage() {
                                                                     children: "Target Price"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 359,
+                                                                    lineNumber: 392,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -800,7 +834,7 @@ function OpportunitiesPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 362,
+                                                                    lineNumber: 395,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 opportunity.entry_price && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -812,13 +846,13 @@ function OpportunitiesPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 366,
+                                                                    lineNumber: 399,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 358,
+                                                            lineNumber: 391,
                                                             columnNumber: 27
                                                         }, this),
                                                         opportunity.stop_loss && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -829,7 +863,7 @@ function OpportunitiesPage() {
                                                                     children: "Stop Loss"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 381,
+                                                                    lineNumber: 414,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -840,7 +874,7 @@ function OpportunitiesPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 384,
+                                                                    lineNumber: 417,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 opportunity.entry_price && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -852,25 +886,25 @@ function OpportunitiesPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 388,
+                                                                    lineNumber: 421,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 380,
+                                                            lineNumber: 413,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                    lineNumber: 346,
+                                                    lineNumber: 379,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                            lineNumber: 319,
+                                            lineNumber: 352,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -880,7 +914,7 @@ function OpportunitiesPage() {
                                                     className: "h-8 w-8 text-gray-400 mb-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                    lineNumber: 407,
+                                                    lineNumber: 440,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -891,7 +925,7 @@ function OpportunitiesPage() {
                                                             children: "Confidence Score"
                                                         }, void 0, false, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 409,
+                                                            lineNumber: 442,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -899,7 +933,7 @@ function OpportunitiesPage() {
                                                             children: opportunity.score.toFixed(1)
                                                         }, void 0, false, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 412,
+                                                            lineNumber: 445,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -907,25 +941,25 @@ function OpportunitiesPage() {
                                                             children: "/10"
                                                         }, void 0, false, {
                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 419,
+                                                            lineNumber: 452,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                    lineNumber: 408,
+                                                    lineNumber: 441,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                            lineNumber: 406,
+                                            lineNumber: 439,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                    lineNumber: 317,
+                                    lineNumber: 350,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -937,7 +971,7 @@ function OpportunitiesPage() {
                                                 className: "h-5 w-5 mr-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 431,
+                                                lineNumber: 464,
                                                 columnNumber: 23
                                             }, this),
                                             "Hide Full Research"
@@ -948,7 +982,7 @@ function OpportunitiesPage() {
                                                 className: "h-5 w-5 mr-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 436,
+                                                lineNumber: 469,
                                                 columnNumber: 23
                                             }, this),
                                             "Show Full Multi-Agent Research"
@@ -956,7 +990,7 @@ function OpportunitiesPage() {
                                     }, void 0, true)
                                 }, void 0, false, {
                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                    lineNumber: 425,
+                                    lineNumber: 458,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -986,7 +1020,7 @@ function OpportunitiesPage() {
                                                         className: "h-8 w-8 text-blue-600 animate-spin mx-auto mb-3"
                                                     }, void 0, false, {
                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                        lineNumber: 455,
+                                                        lineNumber: 488,
                                                         columnNumber: 29
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -999,60 +1033,116 @@ function OpportunitiesPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                        lineNumber: 456,
+                                                        lineNumber: 489,
                                                         columnNumber: 29
                                                     }, this),
                                                     analysisProgress[opportunity.symbol] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "max-w-md mx-auto mt-4",
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "h-2 bg-gray-200 rounded-full overflow-hidden",
-                                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "h-full bg-blue-600 transition-all duration-300",
-                                                                        style: {
-                                                                            width: "".concat(analysisProgress[opportunity.symbol].progress, "%")
-                                                                        }
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "max-w-md mx-auto mt-4",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "h-2 bg-gray-200 rounded-full overflow-hidden",
+                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                            className: "h-full bg-blue-600 transition-all duration-300",
+                                                                            style: {
+                                                                                width: "".concat(analysisProgress[opportunity.symbol].progress, "%")
+                                                                            }
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                            lineNumber: 497,
+                                                                            columnNumber: 37
+                                                                        }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 464,
-                                                                        columnNumber: 37
+                                                                        lineNumber: 496,
+                                                                        columnNumber: 35
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                        className: "text-sm text-gray-500 mt-2",
+                                                                        children: analysisProgress[opportunity.symbol].currentAgent
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                        lineNumber: 507,
+                                                                        columnNumber: 35
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                        className: "text-xs text-gray-400 mt-1",
+                                                                        children: [
+                                                                            analysisProgress[opportunity.symbol].progress.toFixed(0),
+                                                                            "% complete"
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                        lineNumber: 513,
+                                                                        columnNumber: 35
                                                                     }, this)
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 463,
-                                                                    columnNumber: 35
-                                                                }, this),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                    className: "text-sm text-gray-500 mt-2",
-                                                                    children: analysisProgress[opportunity.symbol].currentAgent
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 474,
-                                                                    columnNumber: 35
-                                                                }, this),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                    className: "text-xs text-gray-400 mt-1",
-                                                                    children: [
-                                                                        analysisProgress[opportunity.symbol].progress.toFixed(0),
-                                                                        "% complete"
-                                                                    ]
-                                                                }, void 0, true, {
-                                                                    fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                    lineNumber: 480,
-                                                                    columnNumber: 35
-                                                                }, this)
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                            lineNumber: 462,
-                                                            columnNumber: 33
-                                                        }, this)
-                                                    }, void 0, false)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                lineNumber: 495,
+                                                                columnNumber: 33
+                                                            }, this),
+                                                            agentTexts[opportunity.symbol] && Object.keys(agentTexts[opportunity.symbol]).length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "mt-8 text-left max-w-4xl mx-auto space-y-4",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                                        className: "text-lg font-bold text-gray-900 mb-4",
+                                                                        children: "📝 Agent Analysis (Live)"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                        lineNumber: 526,
+                                                                        columnNumber: 39
+                                                                    }, this),
+                                                                    Object.entries(agentTexts[opportunity.symbol]).map((param)=>{
+                                                                        let [agent, text] = param;
+                                                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                            className: "bg-gray-50 border border-gray-200 rounded-lg p-4",
+                                                                            children: [
+                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
+                                                                                    className: "font-semibold text-sm text-blue-600 mb-2",
+                                                                                    children: agent
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                                    lineNumber: 536,
+                                                                                    columnNumber: 43
+                                                                                }, this),
+                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                                    className: "text-sm text-gray-700 whitespace-pre-wrap",
+                                                                                    children: [
+                                                                                        text,
+                                                                                        text && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                            className: "inline-block w-2 h-4 bg-blue-600 animate-pulse ml-1"
+                                                                                        }, void 0, false, {
+                                                                                            fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                                            lineNumber: 542,
+                                                                                            columnNumber: 47
+                                                                                        }, this)
+                                                                                    ]
+                                                                                }, void 0, true, {
+                                                                                    fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                                    lineNumber: 539,
+                                                                                    columnNumber: 43
+                                                                                }, this)
+                                                                            ]
+                                                                        }, agent, true, {
+                                                                            fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                            lineNumber: 532,
+                                                                            columnNumber: 41
+                                                                        }, this);
+                                                                    })
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
+                                                                lineNumber: 525,
+                                                                columnNumber: 37
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 454,
+                                                lineNumber: 487,
                                                 columnNumber: 27
                                             }, this) : analysisData[opportunity.symbol] ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "space-y-6",
@@ -1070,14 +1160,14 @@ function OpportunitiesPage() {
                                                                                 className: "h-6 w-6 text-blue-600 mr-2"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 496,
+                                                                                lineNumber: 558,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             "Multi-Agent Consensus"
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 495,
+                                                                        lineNumber: 557,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1085,13 +1175,13 @@ function OpportunitiesPage() {
                                                                         children: analysisData[opportunity.symbol].overall_recommendation
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 499,
+                                                                        lineNumber: 561,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 494,
+                                                                lineNumber: 556,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1099,7 +1189,7 @@ function OpportunitiesPage() {
                                                                 children: analysisData[opportunity.symbol].debate_summary
                                                             }, void 0, false, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 506,
+                                                                lineNumber: 568,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1112,7 +1202,7 @@ function OpportunitiesPage() {
                                                                                 children: "Bull Case"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 514,
+                                                                                lineNumber: 576,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1123,13 +1213,13 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 517,
+                                                                                lineNumber: 579,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 513,
+                                                                        lineNumber: 575,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1139,7 +1229,7 @@ function OpportunitiesPage() {
                                                                                 children: "Base Case"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 525,
+                                                                                lineNumber: 587,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1150,13 +1240,13 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 528,
+                                                                                lineNumber: 590,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 524,
+                                                                        lineNumber: 586,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1166,7 +1256,7 @@ function OpportunitiesPage() {
                                                                                 children: "Bear Case"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 536,
+                                                                                lineNumber: 598,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1177,25 +1267,25 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 539,
+                                                                                lineNumber: 601,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 535,
+                                                                        lineNumber: 597,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 512,
+                                                                lineNumber: 574,
                                                                 columnNumber: 31
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                        lineNumber: 493,
+                                                        lineNumber: 555,
                                                         columnNumber: 29
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1211,7 +1301,7 @@ function OpportunitiesPage() {
                                                                                 className: "h-5 w-5 text-blue-600 mr-2"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 554,
+                                                                                lineNumber: 616,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1219,7 +1309,7 @@ function OpportunitiesPage() {
                                                                                 children: "Market Analyst"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 555,
+                                                                                lineNumber: 617,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1227,13 +1317,13 @@ function OpportunitiesPage() {
                                                                                 children: analysisData[opportunity.symbol].agents.market_analyst.recommendation
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 558,
+                                                                                lineNumber: 620,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 553,
+                                                                        lineNumber: 615,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1241,7 +1331,7 @@ function OpportunitiesPage() {
                                                                         children: analysisData[opportunity.symbol].agents.market_analyst.reasoning
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 576,
+                                                                        lineNumber: 638,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1252,7 +1342,7 @@ function OpportunitiesPage() {
                                                                                 children: "Confidence"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 583,
+                                                                                lineNumber: 645,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1263,13 +1353,13 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 586,
+                                                                                lineNumber: 648,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 582,
+                                                                        lineNumber: 644,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     analysisData[opportunity.symbol].agents.market_analyst.source_data && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1282,7 +1372,7 @@ function OpportunitiesPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 597,
+                                                                        lineNumber: 659,
                                                                         columnNumber: 35
                                                                     }, this),
                                                                     expandedSources[opportunity.symbol] === "market_analyst" && analysisData[opportunity.symbol].agents.market_analyst.source_data && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1292,18 +1382,18 @@ function OpportunitiesPage() {
                                                                             children: JSON.stringify(analysisData[opportunity.symbol].agents.market_analyst.source_data, null, 2)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                            lineNumber: 619,
+                                                                            lineNumber: 681,
                                                                             columnNumber: 39
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 618,
+                                                                        lineNumber: 680,
                                                                         columnNumber: 37
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 552,
+                                                                lineNumber: 614,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1316,7 +1406,7 @@ function OpportunitiesPage() {
                                                                                 className: "h-5 w-5 text-purple-600 mr-2"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 634,
+                                                                                lineNumber: 696,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1324,7 +1414,7 @@ function OpportunitiesPage() {
                                                                                 children: "News Analyst"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 635,
+                                                                                lineNumber: 697,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1332,13 +1422,13 @@ function OpportunitiesPage() {
                                                                                 children: analysisData[opportunity.symbol].agents.news_analyst.recommendation
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 638,
+                                                                                lineNumber: 700,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 633,
+                                                                        lineNumber: 695,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1346,7 +1436,7 @@ function OpportunitiesPage() {
                                                                         children: analysisData[opportunity.symbol].agents.news_analyst.reasoning
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 656,
+                                                                        lineNumber: 718,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1357,7 +1447,7 @@ function OpportunitiesPage() {
                                                                                 children: "Confidence"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 663,
+                                                                                lineNumber: 725,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1368,19 +1458,19 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 666,
+                                                                                lineNumber: 728,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 662,
+                                                                        lineNumber: 724,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 632,
+                                                                lineNumber: 694,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1393,7 +1483,7 @@ function OpportunitiesPage() {
                                                                                 className: "h-5 w-5 text-green-600 mr-2"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 679,
+                                                                                lineNumber: 741,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1401,7 +1491,7 @@ function OpportunitiesPage() {
                                                                                 children: "Fundamentals Analyst"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 680,
+                                                                                lineNumber: 742,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1409,13 +1499,13 @@ function OpportunitiesPage() {
                                                                                 children: analysisData[opportunity.symbol].agents.fundamentals_analyst.recommendation
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 683,
+                                                                                lineNumber: 745,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 678,
+                                                                        lineNumber: 740,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1423,7 +1513,7 @@ function OpportunitiesPage() {
                                                                         children: analysisData[opportunity.symbol].agents.fundamentals_analyst.reasoning
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 702,
+                                                                        lineNumber: 764,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1434,7 +1524,7 @@ function OpportunitiesPage() {
                                                                                 children: "Confidence"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 709,
+                                                                                lineNumber: 771,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1445,19 +1535,19 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 712,
+                                                                                lineNumber: 774,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 708,
+                                                                        lineNumber: 770,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 677,
+                                                                lineNumber: 739,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1470,7 +1560,7 @@ function OpportunitiesPage() {
                                                                                 className: "h-5 w-5 text-orange-600 mr-2"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 725,
+                                                                                lineNumber: 787,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1478,7 +1568,7 @@ function OpportunitiesPage() {
                                                                                 children: "Risk Manager"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 726,
+                                                                                lineNumber: 788,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1486,13 +1576,13 @@ function OpportunitiesPage() {
                                                                                 children: analysisData[opportunity.symbol].agents.risk_manager.assessment
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 729,
+                                                                                lineNumber: 791,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 724,
+                                                                        lineNumber: 786,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1500,7 +1590,7 @@ function OpportunitiesPage() {
                                                                         children: analysisData[opportunity.symbol].agents.risk_manager.reasoning
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 736,
+                                                                        lineNumber: 798,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1511,7 +1601,7 @@ function OpportunitiesPage() {
                                                                                 children: "Position Size"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 743,
+                                                                                lineNumber: 805,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1522,57 +1612,57 @@ function OpportunitiesPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                                lineNumber: 746,
+                                                                                lineNumber: 808,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                        lineNumber: 742,
+                                                                        lineNumber: 804,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                                lineNumber: 723,
+                                                                lineNumber: 785,
                                                                 columnNumber: 31
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                        lineNumber: 550,
+                                                        lineNumber: 612,
                                                         columnNumber: 29
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                                lineNumber: 491,
+                                                lineNumber: 553,
                                                 columnNumber: 27
                                             }, this) : null
                                         }, void 0, false, {
                                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                            lineNumber: 452,
+                                            lineNumber: 485,
                                             columnNumber: 23
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                        lineNumber: 445,
+                                        lineNumber: 478,
                                         columnNumber: 21
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                                    lineNumber: 443,
+                                    lineNumber: 476,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, opportunity.symbol, true, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 310,
+                            lineNumber: 343,
                             columnNumber: 15
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                    lineNumber: 308,
+                    lineNumber: 341,
                     columnNumber: 11
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "bg-gray-50 border border-gray-200 rounded-lg p-12 text-center",
@@ -1581,7 +1671,7 @@ function OpportunitiesPage() {
                             className: "h-16 w-16 text-gray-400 mx-auto mb-4"
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 767,
+                            lineNumber: 829,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1589,7 +1679,7 @@ function OpportunitiesPage() {
                             children: "No opportunities found matching your filters"
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 768,
+                            lineNumber: 830,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1598,28 +1688,28 @@ function OpportunitiesPage() {
                             children: "Clear filters"
                         }, void 0, false, {
                             fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                            lineNumber: 771,
+                            lineNumber: 833,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                    lineNumber: 766,
+                    lineNumber: 828,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-                lineNumber: 291,
+                lineNumber: 324,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/true-north-trading/frontend/src/app/opportunities/page.tsx",
-        lineNumber: 224,
+        lineNumber: 257,
         columnNumber: 5
     }, this);
 }
-_s(OpportunitiesPage, "/jxFjpBGl2GXWIDBr0cQshIfkTg=", false, function() {
+_s(OpportunitiesPage, "0Vl98OpqzXfr5pC2wcsddZEIN/U=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$true$2d$north$2d$trading$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useOpportunities"]
     ];

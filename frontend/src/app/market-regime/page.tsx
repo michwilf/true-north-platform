@@ -10,6 +10,9 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import StreamingAnalysisDrawer from "@/components/StreamingAnalysisDrawer";
+import AIAnalysisButton from "@/components/AIAnalysisButton";
+import { startContextualAnalysis } from "@/lib/contextualAnalysis";
 
 interface DetailedMarketRegime {
   volatility_regime: string;
@@ -47,6 +50,16 @@ export default function MarketRegimePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // AI Analysis states
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState({
+    currentAgent: "",
+    progress: 0,
+  });
+  const [agentTexts, setAgentTexts] = useState<Record<string, string>>({});
+  const [finalData, setFinalData] = useState<any>(null);
+
   useEffect(() => {
     loadRegimeData();
 
@@ -71,6 +84,84 @@ export default function MarketRegimePage() {
       console.error("Error loading regime data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarketAnalysis = async () => {
+    // Open drawer and start analysis
+    setDrawerOpen(true);
+    setIsAnalyzing(true);
+    setAnalysisProgress({ currentAgent: "Starting...", progress: 0 });
+    setAgentTexts({});
+    setFinalData(null);
+
+    try {
+      console.log("🌍 Starting context-aware MARKET analysis...");
+
+      // 🎯 BUILD CONTEXT OBJECT with market regime data
+      const context = {
+        type: "market" as const,
+        symbol: "SPY",
+        page: "market-regime",
+        panel: "regime-overview",
+        data: regimeData
+          ? {
+              volatility_regime: regimeData.volatility_regime,
+              market_trend: regimeData.market_trend,
+              risk_sentiment: regimeData.risk_sentiment,
+              vix_level: regimeData.vix_level,
+              spy_trend: regimeData.spy_trend,
+              yield_10y: regimeData.yield_10y,
+              yield_change: regimeData.yield_change,
+            }
+          : undefined,
+      };
+
+      // Start contextual analysis with callbacks
+      await startContextualAnalysis(context, {
+        onAgentStart: (agent, progress) => {
+          console.log(`🤖 ${agent} starting (${progress}%)`);
+          setAnalysisProgress({
+            currentAgent: agent,
+            progress,
+          });
+        },
+
+        onAgentTextChunk: (agent, chunk) => {
+          setAgentTexts((prev) => ({
+            ...prev,
+            [agent]: (prev[agent] || "") + chunk,
+          }));
+        },
+
+        onAgentComplete: (agent, progress) => {
+          console.log(`✅ ${agent} complete (${progress}%)`);
+        },
+
+        onSynthesisStart: () => {
+          console.log("🔬 Synthesizing market outlook...");
+          setAnalysisProgress({
+            currentAgent: "Synthesizing market outlook...",
+            progress: 90,
+          });
+        },
+
+        onDone: (data) => {
+          console.log("🎉 Market analysis complete!", data);
+          setFinalData(data);
+          setIsAnalyzing(false);
+          setAnalysisProgress({ currentAgent: "Complete!", progress: 100 });
+        },
+
+        onError: (error) => {
+          console.error("❌ Market analysis error:", error);
+          setIsAnalyzing(false);
+          setAnalysisProgress({ currentAgent: "Error occurred", progress: 0 });
+        },
+      });
+    } catch (error) {
+      console.error("Failed to start market analysis:", error);
+      setIsAnalyzing(false);
     }
   };
 
@@ -167,10 +258,21 @@ export default function MarketRegimePage() {
                 Updated:{" "}
                 {new Date(regimeData.analysis_timestamp).toLocaleTimeString()}
               </div>
+              <AIAnalysisButton
+                context={{
+                  type: "market",
+                  data: regimeData,
+                  label: "Market Regime",
+                }}
+                onAnalyze={handleMarketAnalysis}
+                variant="primary"
+                size="md"
+                isAnalyzing={isAnalyzing}
+              />
               <button
                 onClick={loadRegimeData}
                 disabled={loading}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
               >
                 <ArrowPathIcon
                   className={`h-5 w-5 mr-2 ${loading ? "animate-spin" : ""}`}
@@ -484,6 +586,18 @@ export default function MarketRegimePage() {
           </div>
         </motion.div>
       </div>
+
+      {/* AI Analysis Drawer */}
+      <StreamingAnalysisDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        symbol="SPY"
+        isStreaming={isAnalyzing}
+        progress={analysisProgress.progress}
+        currentAgent={analysisProgress.currentAgent}
+        agentTexts={agentTexts}
+        finalData={finalData}
+      />
     </div>
   );
 }

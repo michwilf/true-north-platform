@@ -50,6 +50,7 @@ from backend.api.endpoints import (
     enhanced_opportunities_router,
     enhanced_market_regime_router,
     enhanced_portfolio_router,
+    contextual_analysis_router,
 )
 from backend.core.discovery import EnhancedDiscoveryEngine
 from backend.core.monitoring import RobustMonitoringSystem
@@ -140,6 +141,7 @@ app.include_router(autonomous_router)
 app.include_router(enhanced_opportunities_router)
 app.include_router(enhanced_market_regime_router)
 app.include_router(enhanced_portfolio_router)
+app.include_router(contextual_analysis_router)  # Context-aware analysis routing
 
 
 @app.get("/")

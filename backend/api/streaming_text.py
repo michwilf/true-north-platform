@@ -7,6 +7,11 @@ from typing import AsyncGenerator, Dict, Any
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 import os
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 async def stream_agent_analysis(
@@ -37,6 +42,7 @@ async def stream_agent_analysis(
     full_text = ""
 
     # Start streaming
+    logger.info(f"🚀 [{agent_name}] Starting text streaming...")
     yield {
         "event": "agent_text_start",
         "agent": agent_name,
@@ -45,10 +51,13 @@ async def stream_agent_analysis(
 
     try:
         # Stream the response
+        logger.info(f"📡 [{agent_name}] Calling LLM (model={model})...")
+        chunk_count = 0
         async for chunk in llm.astream(
             [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
         ):
             if chunk.content:
+                chunk_count += 1
                 full_text += chunk.content
 
                 # Yield each chunk
@@ -60,6 +69,9 @@ async def stream_agent_analysis(
                 }
 
         # Analysis complete
+        logger.info(
+            f"✅ [{agent_name}] Streaming complete! Received {chunk_count} chunks, {len(full_text)} characters"
+        )
         yield {
             "event": "agent_text_complete",
             "agent": agent_name,
@@ -68,6 +80,7 @@ async def stream_agent_analysis(
         }
 
     except Exception as e:
+        logger.error(f"❌ [{agent_name}] Error during streaming: {e}")
         yield {"event": "agent_error", "agent": agent_name, "error": str(e)}
 
 
@@ -81,6 +94,9 @@ async def stream_stock_analysis_with_text(
     not just progress updates.
     """
     try:
+        logger.info(
+            f"🎯 ========== STARTING MULTI-AGENT ANALYSIS FOR {symbol} =========="
+        )
         yield {
             "event": "start",
             "symbol": symbol,
@@ -89,6 +105,7 @@ async def stream_stock_analysis_with_text(
         }
 
         # Agent configurations
+        logger.info(f"📋 [{symbol}] Configured 4 agents for analysis")
         agents = [
             {
                 "name": "Market Analyst",
@@ -119,6 +136,9 @@ async def stream_stock_analysis_with_text(
             agent_name = agent_config["name"]
             progress = (i / len(agents)) * 100
 
+            logger.info(
+                f"📊 [{symbol}] Agent {i+1}/{len(agents)}: {agent_name} starting (progress: {progress:.0f}%)"
+            )
             yield {"event": "agent_start", "agent": agent_name, "progress": progress}
 
             # Stream the agent's text analysis
@@ -134,16 +154,26 @@ async def stream_stock_analysis_with_text(
                 # Accumulate full text
                 if text_event["event"] == "agent_text_complete":
                     full_text = text_event["full_text"]
+                    logger.info(
+                        f"📝 [{symbol}] {agent_name} completed: {len(full_text)} chars"
+                    )
 
             agent_results[agent_name.lower().replace(" ", "_")] = full_text
 
             progress = ((i + 1) / len(agents)) * 100
+            logger.info(
+                f"✅ [{symbol}] Agent {i+1}/{len(agents)}: {agent_name} complete (progress: {progress:.0f}%)"
+            )
             yield {"event": "agent_complete", "agent": agent_name, "progress": progress}
 
         # Synthesis phase
+        logger.info(f"🔬 [{symbol}] Starting synthesis phase (90% complete)...")
         yield {"event": "synthesis_start", "message": "Synthesizing agent reports..."}
 
         # Create synthesis prompt
+        logger.info(
+            f"📄 [{symbol}] Creating synthesis prompt from {len(agent_results)} agent reports"
+        )
         synthesis_prompt = f"""
 Based on the analysis from all agents, provide a final recommendation for {symbol}.
 
@@ -156,6 +186,7 @@ Provide: BUY/SELL/HOLD recommendation with justification.
 """
 
         # Stream synthesis
+        logger.info(f"🤖 [{symbol}] Calling Investment Synthesizer agent...")
         synthesis_text = ""
         async for synthesis_event in stream_agent_analysis(
             agent_name="Investment Synthesizer",
@@ -166,8 +197,12 @@ Provide: BUY/SELL/HOLD recommendation with justification.
 
             if synthesis_event["event"] == "agent_text_complete":
                 synthesis_text = synthesis_event["full_text"]
+                logger.info(
+                    f"✅ [{symbol}] Synthesis complete: {len(synthesis_text)} chars"
+                )
 
         # Determine recommendation from synthesis
+        logger.info(f"🔍 [{symbol}] Parsing recommendation from synthesis...")
         recommendation = "HOLD"
         if "BUY" in synthesis_text.upper() and synthesis_text.upper().find(
             "BUY"
@@ -184,7 +219,10 @@ Provide: BUY/SELL/HOLD recommendation with justification.
         elif "SELL" in synthesis_text.upper():
             recommendation = "SELL"
 
+        logger.info(f"📊 [{symbol}] Recommendation determined: {recommendation}")
+
         # Get price data
+        logger.info(f"💰 [{symbol}] Fetching current price data from yfinance...")
         import yfinance as yf
 
         ticker_data = yf.Ticker(symbol.upper())
@@ -194,6 +232,8 @@ Provide: BUY/SELL/HOLD recommendation with justification.
             else 100.0
         )
 
+        logger.info(f"💵 [{symbol}] Current price: ${current_price:.2f}")
+
         target_price = (
             current_price * 1.15 if recommendation == "BUY" else current_price
         )
@@ -201,19 +241,67 @@ Provide: BUY/SELL/HOLD recommendation with justification.
             current_price * 0.95 if recommendation == "BUY" else current_price * 0.90
         )
 
+        # Calculate bull/base/bear case prices
+        bull_case_price = current_price * 1.25
+        base_case_price = current_price * 1.10
+        bear_case_price = current_price * 0.90
+
+        logger.info(
+            f"🎯 [{symbol}] Target: ${target_price:.2f}, Stop Loss: ${stop_loss:.2f}"
+        )
+        logger.info(
+            f"📊 [{symbol}] Bull: ${bull_case_price:.2f}, Base: ${base_case_price:.2f}, Bear: ${bear_case_price:.2f}"
+        )
+
         # Final result
+        logger.info(
+            f"✅ [{symbol}] ========== ANALYSIS COMPLETE - SENDING 'done' EVENT =========="
+        )
         yield {
             "event": "done",
             "symbol": symbol.upper(),
             "recommendation": recommendation,
+            "overall_recommendation": recommendation,
             "confidence": 0.80,
             "target_price": float(target_price),
             "stop_loss": float(stop_loss),
             "current_price": float(current_price),
+            "price_targets": {
+                "bull_case": float(bull_case_price),
+                "base_case": float(base_case_price),
+                "bear_case": float(bear_case_price),
+            },
+            "agents": {
+                "market_analyst": {
+                    "recommendation": recommendation,
+                    "reasoning": agent_results.get("market_analyst", "")[:200] + "...",
+                    "confidence": 0.8,
+                },
+                "social_analyst": {
+                    "recommendation": recommendation,
+                    "reasoning": agent_results.get("social_analyst", "")[:200] + "...",
+                    "confidence": 0.75,
+                },
+                "news_analyst": {
+                    "recommendation": recommendation,
+                    "reasoning": agent_results.get("news_analyst", "")[:200] + "...",
+                    "confidence": 0.8,
+                },
+                "fundamentals_analyst": {
+                    "recommendation": recommendation,
+                    "reasoning": agent_results.get("fundamentals_analyst", "")[:200]
+                    + "...",
+                    "confidence": 0.85,
+                },
+            },
             "agent_reports": agent_results,
+            "debate_summary": synthesis_text,
             "synthesis": synthesis_text,
             "timestamp": trade_date,
         }
+        logger.info(f"🎉 [{symbol}] 'done' event sent successfully!")
 
     except Exception as e:
+        logger.error(f"❌ [{symbol}] ERROR in stream_stock_analysis_with_text: {e}")
+        logger.exception(e)  # This will print the full stack trace
         yield {"event": "error", "symbol": symbol, "message": str(e)}

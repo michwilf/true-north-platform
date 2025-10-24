@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/MikeyW/true-north-trading/frontend/src/app/analyze/loading.tsx"],"sourcesContent":["import { StreamingAnalysisLoader } from \"@/components/LoadingSkeleton\";\n\nexport default function Loading() {\n  return (\n    <div className=\"min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8\">\n      <div className=\"max-w-7xl mx-auto\">\n        <div className=\"mb-8\">\n          <h1 className=\"text-3xl font-bold text-gray-900 mb-2\">\n            Stock Analysis\n          </h1>\n          <p className=\"text-gray-600\">\n            Multi-agent deep analysis powered by AI\n          </p>\n        </div>\n        <StreamingAnalysisLoader />\n      </div>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBACE,sRAAC;QAAI,WAAU;kBACb,cAAA,sRAAC;YAAI,WAAU;;8BACb,sRAAC;oBAAI,WAAU;;sCACb,sRAAC;4BAAG,WAAU;sCAAwC;;;;;;sCAGtD,sRAAC;4BAAE,WAAU;sCAAgB;;;;;;;;;;;;8BAI/B,sRAAC,wMAAuB;;;;;;;;;;;;;;;;AAIhC","debugId":null}}]
+}

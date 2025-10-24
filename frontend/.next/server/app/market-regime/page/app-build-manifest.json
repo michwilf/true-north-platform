@@ -1,17 +1,29 @@
 {
   "pages": {
     "/market-regime/page": [
-      "static/chunks/b4b39de7a0d06457.js",
-      "static/chunks/69e6fc8e6a1796e7.js",
-      "static/chunks/c17f5fa3a42ff6b5.css",
-      "static/chunks/6d62d1c31f02819f.js",
-      "static/chunks/97217844e0453ad3.js",
-      "static/chunks/f2d548f670431a9b.js",
-      "static/chunks/d554d5ec368cac31.js",
-      "static/chunks/4cdc4ffe2149fa92.js",
-      "static/chunks/1e117b174771d1ec.js",
-      "static/chunks/e8cccde39f8a876d.js",
-      "static/chunks/turbopack-6bd16c0d6292550b.js"
+      "static/chunks/583ef_next_dist_f740dca1._.js",
+      "static/chunks/true-north-trading_frontend_src_app_favicon_ico_mjs_3e5cf184._.js",
+      "static/chunks/[root-of-the-server]__34eb9c9e._.css",
+      "static/chunks/true-north-trading_frontend_4109ae92._.js",
+      "static/chunks/true-north-trading_frontend_src_app_layout_tsx_988f5269._.js",
+      "static/chunks/583ef_next_dist_client_components_builtin_global-error_95cb0fed.js",
+      "static/chunks/true-north-trading_frontend_src_79efc123._.js",
+      "static/chunks/583ef_motion-dom_dist_es_41ca31b7._.js",
+      "static/chunks/583ef_framer-motion_dist_es_936813c4._.js",
+      "static/chunks/583ef_tailwind-merge_dist_bundle-mjs_mjs_68860a68._.js",
+      "static/chunks/583ef_micromark-core-commonmark_dev_lib_db31b5f7._.js",
+      "static/chunks/583ef_@radix-ui_b40e1de4._.js",
+      "static/chunks/583ef_094e2947._.js",
+      "static/chunks/true-north-trading_frontend_src_app_market-regime_page_tsx_95cb0fed._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_140d5292._.js",
+      "static/chunks/583ef_next_dist_compiled_react-dom_5b55c238._.js",
+      "static/chunks/583ef_next_dist_compiled_next-devtools_index_6fe24b5b.js",
+      "static/chunks/583ef_next_dist_compiled_2d205dab._.js",
+      "static/chunks/583ef_next_dist_client_a6c4a225._.js",
+      "static/chunks/583ef_next_dist_612b194d._.js",
+      "static/chunks/583ef_@swc_helpers_cjs_f6af953a._.js",
+      "static/chunks/true-north-trading_frontend_a0ff3932._.js",
+      "static/chunks/turbopack-true-north-trading_frontend_08728fbf._.js"
     ]
   }
 }

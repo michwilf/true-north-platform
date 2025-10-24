@@ -224,7 +224,7 @@ export default function TraderLeaderboardPage() {
             <div className="text-center">
               <ChartBarIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">
-                {sortedTraders.length > 0
+                {sortedTraders.length > 0 && sortedTraders[0].win_rate
                   ? sortedTraders[0].win_rate.toFixed(1)
                   : "0"}
                 %
@@ -234,7 +234,7 @@ export default function TraderLeaderboardPage() {
             <div className="text-center">
               <ArrowTrendingUpIcon className="h-8 w-8 text-purple-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">
-                {sortedTraders.length > 0
+                {sortedTraders.length > 0 && sortedTraders[0].avg_return
                   ? sortedTraders[0].avg_return.toFixed(1)
                   : "0"}
                 %
@@ -244,7 +244,8 @@ export default function TraderLeaderboardPage() {
             <div className="text-center">
               <TrophyIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">
-                {sortedTraders.length > 0
+                {sortedTraders.length > 0 &&
+                sortedTraders[0].performance_score != null
                   ? sortedTraders[0].performance_score.toFixed(0)
                   : "0"}
               </p>
@@ -330,7 +331,7 @@ export default function TraderLeaderboardPage() {
                       trader.performance_score
                     )}`}
                   >
-                    {trader.performance_score.toFixed(0)}
+                    {trader.performance_score?.toFixed(0) ?? "0"}
                   </div>
                   <p className="text-sm text-gray-600">Performance Score</p>
                 </div>
@@ -341,35 +342,35 @@ export default function TraderLeaderboardPage() {
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">Win Rate</p>
                   <p className="text-lg font-bold text-green-600">
-                    {trader.win_rate.toFixed(1)}%
+                    {trader.win_rate?.toFixed(1) ?? "0"}%
                   </p>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">Avg Return</p>
                   <p className="text-lg font-bold text-blue-600">
-                    {trader.avg_return.toFixed(1)}%
+                    {trader.avg_return?.toFixed(1) ?? "0"}%
                   </p>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">Sharpe Ratio</p>
                   <p className="text-lg font-bold text-purple-600">
-                    {trader.sharpe_ratio.toFixed(2)}
+                    {trader.sharpe_ratio?.toFixed(2) ?? "0"}
                   </p>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">Max Drawdown</p>
                   <p className="text-lg font-bold text-red-600">
-                    {trader.max_drawdown.toFixed(1)}%
+                    {trader.max_drawdown?.toFixed(1) ?? "0"}%
                   </p>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">Total Trades</p>
                   <p className="text-lg font-bold text-gray-900">
-                    {trader.total_trades}
+                    {trader.total_trades ?? 0}
                   </p>
                 </div>
               </div>
@@ -378,20 +379,20 @@ export default function TraderLeaderboardPage() {
               <div className="mt-4">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
                   <span>Performance Score</span>
-                  <span>{trader.performance_score.toFixed(0)}/100</span>
+                  <span>{trader.performance_score?.toFixed(0) ?? "0"}/100</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full ${
-                      trader.performance_score >= 90
+                      (trader.performance_score ?? 0) >= 90
                         ? "bg-green-600"
-                        : trader.performance_score >= 80
+                        : (trader.performance_score ?? 0) >= 80
                         ? "bg-blue-600"
-                        : trader.performance_score >= 70
+                        : (trader.performance_score ?? 0) >= 70
                         ? "bg-yellow-600"
                         : "bg-red-600"
                     }`}
-                    style={{ width: `${trader.performance_score}%` }}
+                    style={{ width: `${trader.performance_score ?? 0}%` }}
                   />
                 </div>
               </div>
