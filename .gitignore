@@ -3,10 +3,6 @@
 backend/data/sqlite_backup/
 backend/core/portfolio/tracker_mongodb.py
 
-# MongoDB Documentation
-BACKEND_STATUS_REPORT.md
-MONGODB_MIGRATION_TODO.md
-
 # Frontend Build Files
 frontend/.next/
 frontend/.next/
