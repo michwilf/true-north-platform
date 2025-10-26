@@ -58,7 +58,9 @@ export default function MarketRegimePage() {
     progress: 0,
   });
   const [agentTexts, setAgentTexts] = useState<Record<string, string>>({});
-  const [finalData, setFinalData] = useState<any>(null);
+  const [finalData, setFinalData] = useState<Record<string, unknown> | null>(
+    null
+  );
 
   useEffect(() => {
     loadRegimeData();
@@ -261,7 +263,7 @@ export default function MarketRegimePage() {
               <AIAnalysisButton
                 context={{
                   type: "market",
-                  data: regimeData,
+                  data: regimeData as unknown as Record<string, unknown>,
                   label: "Market Regime",
                 }}
                 onAnalyze={handleMarketAnalysis}

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/MikeyW/true-north-trading/frontend/src/app/sectors/loading.tsx"],"sourcesContent":["import { PageSkeleton } from \"@/components/LoadingSkeleton\";\n\nexport default function Loading() {\n  return <PageSkeleton />;\n}\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBAAO,sRAAC,6LAAY;;;;;AACtB","debugId":null}}]
-}

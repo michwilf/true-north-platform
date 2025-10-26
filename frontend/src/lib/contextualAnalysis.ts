@@ -19,7 +19,7 @@ export interface AnalysisContext {
   symbol?: string;
   page?: string;
   panel?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export interface StreamCallbacks {
@@ -27,7 +27,7 @@ export interface StreamCallbacks {
   onAgentTextChunk?: (agent: string, chunk: string) => void;
   onAgentComplete?: (agent: string, progress: number) => void;
   onSynthesisStart?: () => void;
-  onDone?: (data: any) => void;
+  onDone?: (data: Record<string, unknown>) => void;
   onError?: (error: string) => void;
 }
 
@@ -122,8 +122,8 @@ export async function startContextualAnalysis(
         }
       }
     }
-  } catch (error: any) {
-    callbacks.onError?.(error.message || "Analysis failed");
+  } catch (error: unknown) {
+    callbacks.onError?.((error as Error).message || "Analysis failed");
     throw error;
   }
 }
@@ -152,7 +152,10 @@ export function useContextualAnalysis() {
   const [agentTexts, setAgentTexts] = React.useState<Record<string, string>>(
     {}
   );
-  const [finalData, setFinalData] = React.useState<any>(null);
+  const [finalData, setFinalData] = React.useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const startAnalysis = React.useCallback(async (context: AnalysisContext) => {
@@ -193,8 +196,8 @@ export function useContextualAnalysis() {
           setIsAnalyzing(false);
         },
       });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
       setIsAnalyzing(false);
     }
   }, []);

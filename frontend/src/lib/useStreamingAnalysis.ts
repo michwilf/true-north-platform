@@ -9,7 +9,7 @@ interface StreamEvent {
   agent?: string;
   chunk?: string;
   progress?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface AgentText {
@@ -20,7 +20,7 @@ interface AgentText {
 
 interface UseStreamingOptions {
   onEvent?: (event: StreamEvent) => void;
-  onComplete?: (finalData: any) => void;
+  onComplete?: (finalData: Record<string, unknown>) => void;
   onError?: (error: string) => void;
 }
 
@@ -33,7 +33,9 @@ export function useStreamingAnalysis(
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [events, setEvents] = useState<StreamEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [finalData, setFinalData] = useState<any>(null);
+  const [finalData, setFinalData] = useState<Record<string, unknown> | null>(
+    null
+  );
   const [agentTexts, setAgentTexts] = useState<Record<string, AgentText>>({});
   const [synthesisText, setSynthesisText] = useState<string>("");
 
@@ -75,7 +77,7 @@ export function useStreamingAnalysis(
               break;
 
             case "agent_start":
-              setCurrentAgent(data.agent);
+              setCurrentAgent(data.agent || null);
               setProgress(data.progress || 0);
               break;
 
@@ -141,9 +143,9 @@ export function useStreamingAnalysis(
               break;
 
             case "error":
-              setError(data.message || "Unknown error occurred");
+              setError(String(data.message || "Unknown error occurred"));
               setIsStreaming(false);
-              options.onError?.(data.message || "Unknown error");
+              options.onError?.(String(data.message || "Unknown error"));
               eventSource?.close();
               break;
           }
@@ -168,6 +170,7 @@ export function useStreamingAnalysis(
       eventSource?.close();
       setIsStreaming(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   const reset = useCallback(() => {

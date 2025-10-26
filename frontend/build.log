@@ -1,0 +1,44 @@
+
+> trading-dashboard@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/MikeyW/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/MikeyW/true-north-trading/frontend/package-lock.json
+
+   ▲ Next.js 15.5.6
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 4.0s
+   Linting and checking validity of types ...
+
+./src/app/opportunities/page.tsx
+10:3  Warning: 'CheckCircleIcon' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+11:3  Warning: 'ChevronUpIcon' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+12:3  Warning: 'SparklesIcon' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+13:3  Warning: 'NewspaperIcon' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+14:3  Warning: 'CalculatorIcon' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+15:3  Warning: 'ShieldCheckIcon' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+17:18  Warning: 'AnimatePresence' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+92:10  Warning: 'expandedSources' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+243:9  Warning: 'toggleSourceEvidence' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+Failed to compile.
+
+./src/lib/useStreamingAnalysis.ts:78:31
+Type error: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string | null>'.
+
+[0m [90m 76 |[39m
+ [90m 77 |[39m             [36mcase[39m [32m"agent_start"[39m[33m:[39m
+[31m[1m>[22m[39m[90m 78 |[39m               setCurrentAgent(data[33m.[39magent)[33m;[39m
+ [90m    |[39m                               [31m[1m^[22m[39m
+ [90m 79 |[39m               setProgress(data[33m.[39mprogress [33m||[39m [35m0[39m)[33m;[39m
+ [90m 80 |[39m               [36mbreak[39m[33m;[39m
+ [90m 81 |[39m[0m
+Next.js build worker exited with code: 1 and signal: null

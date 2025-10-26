@@ -41,7 +41,7 @@ const topStocks = [
   { symbol: "MSFT", price: 378.85, change: 4.12, changePercent: 1.1 },
 ];
 
-const recentSignals = [
+const _recentSignals = [
   {
     id: 1,
     trader: "Market Wizard",
@@ -72,8 +72,8 @@ export default function Dashboard() {
   // API hooks for real data
   const { data: marketRegime, loading: regimeLoading } = useMarketRegime();
   const {
-    data: opportunities,
-    loading: oppsLoading,
+    data: _opportunities,
+    loading: _oppsLoading,
     refetch: refetchOpps,
   } = useOpportunities();
   const { data: traderSignals, loading: signalsLoading } = useTraderSignals();

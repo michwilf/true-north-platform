@@ -7,12 +7,6 @@
 
 import { CheckCircleIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
 
-interface Agent {
-  name: string;
-  status: "pending" | "active" | "complete";
-  color: string;
-}
-
 interface StreamingProgressProps {
   progress: number;
   currentAgent: string | null;

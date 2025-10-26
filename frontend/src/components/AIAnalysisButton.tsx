@@ -14,7 +14,9 @@ interface AIAnalysisButtonProps {
       | "trader"
       | "sector";
     symbol?: string;
-    data?: any;
+    page?: string;
+    panel?: string;
+    data?: Record<string, unknown>;
     label?: string;
   };
   /** Callback when analysis is triggered */
@@ -172,11 +174,10 @@ export function FloatingAIButton({
  * Inline AI Button - For inline use within cards/rows
  */
 export function InlineAIButton({
-  context,
   onAnalyze,
   isAnalyzing = false,
   className = "",
-}: Omit<AIAnalysisButtonProps, "variant" | "size">) {
+}: Pick<AIAnalysisButtonProps, "onAnalyze" | "isAnalyzing" | "className">) {
   return (
     <button
       onClick={(e) => {

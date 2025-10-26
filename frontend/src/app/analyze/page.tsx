@@ -15,8 +15,9 @@ import { motion } from "framer-motion";
 import { useStockAnalysisStreamText } from "@/lib/useStreamingAnalysis";
 import StreamingMarkdown from "@/components/StreamingMarkdown";
 import StreamingProgress from "@/components/StreamingProgress";
+import type { ComponentType } from "react";
 
-const agentIcons: Record<string, any> = {
+const agentIcons: Record<string, ComponentType<{ className?: string }>> = {
   "Market Analyst": ChartBarIcon,
   "Social Analyst": UserGroupIcon,
   "News Analyst": NewspaperIcon,
@@ -234,16 +235,18 @@ export default function StockAnalysisPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
             className={`rounded-2xl shadow-2xl p-8 ${getRecommendationStyle(
-              finalData.recommendation
+              String(finalData.recommendation || "")
             )}`}
           >
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl font-bold mb-2">
-                  Final Recommendation: {finalData.recommendation}
+                  Final Recommendation:{" "}
+                  {String(finalData.recommendation || "HOLD")}
                 </h2>
                 <p className="text-xl opacity-90">
-                  Confidence: {(finalData.confidence * 100).toFixed(1)}%
+                  Confidence:{" "}
+                  {(Number(finalData.confidence || 0) * 100).toFixed(1)}%
                 </p>
               </div>
               <CheckCircleIcon className="h-16 w-16" />
@@ -253,19 +256,28 @@ export default function StockAnalysisPage() {
               <div className="bg-white/20 backdrop-blur rounded-xl p-4">
                 <p className="text-sm opacity-90 mb-1">Current Price</p>
                 <p className="text-2xl font-bold">
-                  ${finalData.current_price?.toFixed(2) || "N/A"}
+                  $
+                  {typeof finalData.current_price === "number"
+                    ? finalData.current_price.toFixed(2)
+                    : "N/A"}
                 </p>
               </div>
               <div className="bg-white/20 backdrop-blur rounded-xl p-4">
                 <p className="text-sm opacity-90 mb-1">Target Price</p>
                 <p className="text-2xl font-bold">
-                  ${finalData.target_price?.toFixed(2)}
+                  $
+                  {typeof finalData.target_price === "number"
+                    ? finalData.target_price.toFixed(2)
+                    : "N/A"}
                 </p>
               </div>
               <div className="bg-white/20 backdrop-blur rounded-xl p-4">
                 <p className="text-sm opacity-90 mb-1">Stop Loss</p>
                 <p className="text-2xl font-bold">
-                  ${finalData.stop_loss?.toFixed(2)}
+                  $
+                  {typeof finalData.stop_loss === "number"
+                    ? finalData.stop_loss.toFixed(2)
+                    : "N/A"}
                 </p>
               </div>
             </div>

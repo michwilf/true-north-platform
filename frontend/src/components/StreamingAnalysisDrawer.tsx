@@ -19,7 +19,7 @@ interface StreamingAnalysisDrawerProps {
   progress: number;
   currentAgent: string;
   agentTexts: Record<string, string>;
-  finalData: any;
+  finalData: Record<string, unknown> | null;
 }
 
 export default function StreamingAnalysisDrawer({
@@ -34,6 +34,43 @@ export default function StreamingAnalysisDrawer({
 }: StreamingAnalysisDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Helper functions to safely extract values from finalData
+  const getString = (key: string, fallback = ""): string => {
+    if (!finalData) return fallback;
+    const value = finalData[key];
+    return typeof value === "string" ? value : fallback;
+  };
+
+  const getNumber = (key: string, fallback = 0): number => {
+    if (!finalData) return fallback;
+    const value = finalData[key];
+    return typeof value === "number" ? value : fallback;
+  };
+
+  const getNestedNumber = (
+    parent: string,
+    child: string,
+    fallback = 0
+  ): number => {
+    if (!finalData) return fallback;
+    const parentValue = finalData[parent];
+    if (
+      typeof parentValue === "object" &&
+      parentValue !== null &&
+      child in parentValue
+    ) {
+      const value = (parentValue as Record<string, unknown>)[child];
+      return typeof value === "number" ? value : fallback;
+    }
+    return fallback;
+  };
+
+  const hasNested = (parent: string): boolean => {
+    if (!finalData) return false;
+    const value = finalData[parent];
+    return typeof value === "object" && value !== null;
+  };
 
   // Auto-scroll to bottom as content streams in
   useEffect(() => {
@@ -144,35 +181,41 @@ export default function StreamingAnalysisDrawer({
 
                 <div
                   className={`p-4 rounded-lg border-l-4 mb-4 ${getRecommendationColor(
-                    finalData.overall_recommendation || finalData.recommendation
+                    getString("overall_recommendation") ||
+                      getString("recommendation")
                   )}`}
                 >
                   <h4 className="text-lg font-semibold mb-2">
                     Recommendation:{" "}
-                    {finalData.overall_recommendation ||
-                      finalData.recommendation}
+                    {getString("overall_recommendation") ||
+                      getString("recommendation")}
                   </h4>
                   <p className="text-sm">
                     Confidence:{" "}
                     <span className="font-bold">
-                      {((finalData.confidence || 0) * 100).toFixed(1)}%
+                      {(getNumber("confidence", 0) * 100).toFixed(1)}%
                     </span>
                   </p>
                   <p className="text-sm">
-                    Target: ${finalData.target_price?.toFixed(2)} | Stop Loss: $
-                    {finalData.stop_loss?.toFixed(2)}
+                    Target: ${getNumber("target_price", 0).toFixed(2)} | Stop
+                    Loss: ${getNumber("stop_loss", 0).toFixed(2)}
                   </p>
                 </div>
 
                 {/* Price Targets */}
-                {finalData.price_targets && (
+                {hasNested("price_targets") && (
                   <div className="grid grid-cols-3 gap-4 mt-4">
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
                       <p className="text-xs text-green-700 dark:text-green-300 font-medium mb-1">
                         Bull Case
                       </p>
                       <p className="text-xl font-bold text-green-800 dark:text-green-200">
-                        ${finalData.price_targets.bull_case.toFixed(2)}
+                        $
+                        {getNestedNumber(
+                          "price_targets",
+                          "bull_case",
+                          0
+                        ).toFixed(2)}
                       </p>
                     </div>
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
@@ -180,7 +223,12 @@ export default function StreamingAnalysisDrawer({
                         Base Case
                       </p>
                       <p className="text-xl font-bold text-blue-800 dark:text-blue-200">
-                        ${finalData.price_targets.base_case.toFixed(2)}
+                        $
+                        {getNestedNumber(
+                          "price_targets",
+                          "base_case",
+                          0
+                        ).toFixed(2)}
                       </p>
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
@@ -188,7 +236,12 @@ export default function StreamingAnalysisDrawer({
                         Bear Case
                       </p>
                       <p className="text-xl font-bold text-red-800 dark:text-red-200">
-                        ${finalData.price_targets.bear_case.toFixed(2)}
+                        $
+                        {getNestedNumber(
+                          "price_targets",
+                          "bear_case",
+                          0
+                        ).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -196,14 +249,16 @@ export default function StreamingAnalysisDrawer({
               </div>
 
               {/* Investment Thesis */}
-              {(finalData.debate_summary || finalData.synthesis) && (
+              {(getString("debate_summary") || getString("synthesis")) && (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
                     📝 Investment Thesis
                   </h3>
                   <div className="prose dark:prose-invert max-w-none">
                     <StreamingMarkdown
-                      content={finalData.debate_summary || finalData.synthesis}
+                      content={
+                        getString("debate_summary") || getString("synthesis")
+                      }
                     />
                   </div>
                 </div>
