@@ -26,3 +26,6 @@ seaborn
 matplotlib
 langchain_anthropic
 langchain-google-genai
+pymongo
+motor
+nest_asyncio

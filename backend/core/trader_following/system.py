@@ -804,6 +804,9 @@ class TraderFollowingSystem:
     """Main system for following and analyzing traders."""
 
     def __init__(self):
+        # Use MongoDB TraderDatabase instead of SQLite
+        from backend.core.trader_following.trader_database_mongo import TraderDatabase
+
         self.database = TraderDatabase()
         self.performance_analyzer = TraderPerformanceAnalyzer(self.database)
 

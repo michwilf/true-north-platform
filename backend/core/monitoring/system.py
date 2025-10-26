@@ -767,6 +767,9 @@ class RobustMonitoringSystem:
         self.technical_monitor = TechnicalIndicatorMonitor()
         self.news_monitor = NewsMonitor()
         self.notification_manager = NotificationManager()
+        # Use MongoDB AlertDatabase instead of SQLite
+        from backend.core.monitoring.alert_database_mongo import AlertDatabase
+
         self.alert_database = AlertDatabase()
 
         # Watchlist of symbols to monitor
