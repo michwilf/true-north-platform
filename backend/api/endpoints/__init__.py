@@ -10,6 +10,7 @@ from .enhanced_opportunities import router as enhanced_opportunities_router
 from .enhanced_market_regime import router as enhanced_market_regime_router
 from .enhanced_portfolio import router as enhanced_portfolio_router
 from .contextual_analysis import router as contextual_analysis_router
+from .monitoring import router as monitoring_router
 
 __all__ = [
     "market_router",
@@ -22,4 +23,5 @@ __all__ = [
     "enhanced_market_regime_router",
     "enhanced_portfolio_router",
     "contextual_analysis_router",
+    "monitoring_router",
 ]

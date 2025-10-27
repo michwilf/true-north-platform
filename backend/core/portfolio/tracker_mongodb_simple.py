@@ -28,6 +28,16 @@ class Position:
     unrealized_pnl: float
     unrealized_pnl_percent: float
 
+    # New strategic fields for Phase 2
+    side: str = "long"  # "long" or "short"
+    target_price: Optional[float] = None
+    stop_loss: Optional[float] = None
+    reasoning: Optional[str] = None
+    confidence: Optional[float] = None
+    strategy: Optional[str] = None  # Which agent recommended
+    timeframe: Optional[str] = None  # Expected holding period
+    risk_level: Optional[str] = None  # LOW, MEDIUM, HIGH
+
 
 @dataclass
 class Trade:
@@ -98,8 +108,16 @@ class PortfolioTracker:
         shares: float,
         entry_price: float,
         entry_date: Optional[datetime] = None,
-    ):
-        """Add or update a position."""
+        side: str = "long",
+        target_price: Optional[float] = None,
+        stop_loss: Optional[float] = None,
+        reasoning: Optional[str] = None,
+        confidence: Optional[float] = None,
+        strategy: Optional[str] = None,
+        timeframe: Optional[str] = None,
+        risk_level: Optional[str] = None,
+    ) -> bool:
+        """Add or update a position with comprehensive metadata."""
         self._ensure_initialized()
 
         if entry_date is None:
@@ -114,16 +132,51 @@ class PortfolioTracker:
                 "entry_price": entry_price,
                 "entry_date": entry_date,
                 "last_updated": datetime.now(),
+                # Phase 2: Enhanced fields
+                "side": side,
+                "target_price": target_price,
+                "stop_loss": stop_loss,
+                "reasoning": reasoning,
+                "confidence": confidence,
+                "strategy": strategy,
+                "timeframe": timeframe,
+                "risk_level": risk_level,
             }
 
             collection.update_one({"symbol": symbol}, {"$set": document}, upsert=True)
 
             logger.debug(f"✅ Position updated: {symbol}")
+            return True
         except Exception as e:
             logger.error(f"❌ Error adding position {symbol}: {e}")
             raise
 
-    def remove_position(self, symbol: str):
+    def update_position(self, symbol: str, updates: Dict[str, Any]) -> bool:
+        """Update specific fields of an existing position."""
+        self._ensure_initialized()
+
+        try:
+            collection = self._get_collection("PORTFOLIO_POSITIONS")
+            
+            # Add last_updated timestamp
+            updates["last_updated"] = datetime.now()
+            
+            result = collection.update_one(
+                {"symbol": symbol},
+                {"$set": updates}
+            )
+
+            if result.modified_count > 0:
+                logger.debug(f"✅ Position updated: {symbol}")
+                return True
+            else:
+                logger.warning(f"⚠️  Position not found for update: {symbol}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Error updating position {symbol}: {e}")
+            raise
+
+    def remove_position(self, symbol: str) -> bool:
         """Remove a position."""
         self._ensure_initialized()
 
@@ -133,8 +186,10 @@ class PortfolioTracker:
 
             if result.deleted_count > 0:
                 logger.debug(f"✅ Position removed: {symbol}")
+                return True
             else:
                 logger.warning(f"⚠️  Position not found: {symbol}")
+                return False
         except Exception as e:
             logger.error(f"❌ Error removing position {symbol}: {e}")
             raise
@@ -200,6 +255,7 @@ class PortfolioTracker:
                     (unrealized_pnl / cost_basis * 100) if cost_basis > 0 else 0
                 )
 
+                # Phase 2: Extract new fields from MongoDB
                 positions.append(
                     Position(
                         symbol=symbol,
@@ -210,6 +266,15 @@ class PortfolioTracker:
                         position_value=position_value,
                         unrealized_pnl=unrealized_pnl,
                         unrealized_pnl_percent=unrealized_pnl_percent,
+                        # Phase 2: New fields with defaults if not present
+                        side=row.get("side", "long"),
+                        target_price=row.get("target_price"),
+                        stop_loss=row.get("stop_loss"),
+                        reasoning=row.get("reasoning"),
+                        confidence=row.get("confidence"),
+                        strategy=row.get("strategy"),
+                        timeframe=row.get("timeframe"),
+                        risk_level=row.get("risk_level"),
                     )
                 )
 

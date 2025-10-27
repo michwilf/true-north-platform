@@ -289,16 +289,16 @@ export default function OpportunitiesPage() {
                 size="md"
                 isAnalyzing={false}
               />
-              <button
-                onClick={() => refetch()}
-                disabled={loading}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ArrowPathIcon
-                  className={`h-5 w-5 mr-2 ${loading ? "animate-spin" : ""}`}
-                />
-                {loading ? "Discovering..." : "Run Discovery"}
-              </button>
+            <button
+              onClick={() => refetch()}
+              disabled={loading}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowPathIcon
+                className={`h-5 w-5 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
+              {loading ? "Discovering..." : "Run Discovery"}
+            </button>
             </div>
           </div>
         </div>

@@ -81,6 +81,8 @@ export default function TradeResearchModal({
   const [activeTab, setActiveTab] = useState<
     "overview" | "agents" | "details"
   >("overview");
+  const [executing, setExecuting] = useState(false);
+  const [executionError, setExecutionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && trade.symbol) {
@@ -104,6 +106,50 @@ export default function TradeResearchModal({
       console.error("Error fetching research:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExecuteTrade = async () => {
+    setExecuting(true);
+    setExecutionError(null);
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
+      const response = await fetch(`${apiUrl}/api/portfolio/positions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbol: trade.symbol,
+          shares: 100, // TODO: Add quantity input
+          entry_price: trade.current_price || research?.price_targets?.base_case || trade.entry_price,
+          side: trade.side || "long",
+          target_price: research?.price_targets?.bull_case || trade.target_price,
+          stop_loss: research?.price_targets?.bear_case || trade.stop_loss,
+          reasoning: research?.debate_summary || research?.synthesis || trade.reasoning,
+          confidence: research?.confidence || trade.confidence,
+          strategy: "multi_agent_analysis",
+          timeframe: "medium-term",
+          risk_level: "medium",
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to execute trade");
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Show success message and close modal
+        alert(`Trade executed successfully: ${result.message}`);
+        onClose();
+      }
+    } catch (error) {
+      console.error("Trade execution error:", error);
+      setExecutionError(error instanceof Error ? error.message : "Failed to execute trade");
+    } finally {
+      setExecuting(false);
     }
   };
 
@@ -531,10 +577,22 @@ export default function TradeResearchModal({
             </div>
 
             {/* Footer Actions */}
+            {executionError && (
+              <div className="mx-6 mb-4 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-red-800 dark:text-red-200 text-sm font-medium">
+                  ❌ {executionError}
+                </p>
+              </div>
+            )}
+            
             <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800">
               <div className="flex space-x-3">
-                <button className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
-                  Execute Trade
+                <button 
+                  onClick={handleExecuteTrade}
+                  disabled={executing}
+                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {executing ? "Executing..." : "Execute Trade"}
                 </button>
                 <button className="flex-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                   Update Alert

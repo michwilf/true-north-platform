@@ -99,3 +99,38 @@ class StockAnalysisResponse(BaseModel):
     bull_case_price: Optional[float] = None
     base_case_price: Optional[float] = None
     bear_case_price: Optional[float] = None
+
+
+# Phase 2: Trade Execution Models
+
+class OpenPositionRequest(BaseModel):
+    """Request to open a new portfolio position."""
+
+    symbol: str
+    shares: float
+    entry_price: float
+    side: str = "long"
+    target_price: Optional[float] = None
+    stop_loss: Optional[float] = None
+    reasoning: Optional[str] = None
+    confidence: Optional[float] = None
+    strategy: Optional[str] = None
+    timeframe: Optional[str] = None
+    risk_level: Optional[str] = None
+
+
+class UpdatePositionRequest(BaseModel):
+    """Request to update an existing position."""
+
+    target_price: Optional[float] = None
+    stop_loss: Optional[float] = None
+    reasoning: Optional[str] = None
+    shares: Optional[float] = None
+
+
+class PositionResponse(BaseModel):
+    """Response for position operations."""
+
+    success: bool
+    message: str
+    position: Optional[Dict[str, Any]] = None

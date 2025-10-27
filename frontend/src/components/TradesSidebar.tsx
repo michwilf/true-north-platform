@@ -78,46 +78,100 @@ export default function TradesSidebar({
     try {
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
-      const response = await fetch(`${apiUrl}/api/portfolio/positions`);
-      if (response.ok) {
-        const data = await response.json();
-        // Transform portfolio positions into trades
-        const transformedTrades: Trade[] = data.map((position: unknown) => {
-          const pos = position as Record<string, unknown>;
+      
+      // Fetch from multiple endpoints in parallel
+      const [positionsRes, potentialsRes, alertsRes] = await Promise.all([
+        fetch(`${apiUrl}/api/portfolio/positions`),
+        fetch(`${apiUrl}/api/portfolio/potential-trades?limit=10&min_confidence=0.7`),
+        fetch(`${apiUrl}/api/monitoring/alerts?acknowledged=false&resolved=false&limit=20`),
+      ]);
+      
+      // Transform all responses to Trade format
+      const allTrades: Trade[] = [];
+      
+      // Active positions
+      if (positionsRes.ok) {
+        const positions = await positionsRes.json();
+        const transformedPositions: Trade[] = positions.map((pos: unknown) => {
+          const p = pos as Record<string, unknown>;
           return {
-            id: String(pos.symbol || ""),
-            symbol: String(pos.symbol || ""),
-            title: `${pos.side === "long" ? "Long" : "Short"} ${pos.symbol}`,
+            id: String(p.symbol || ""),
+            symbol: String(p.symbol || ""),
+            title: String(p.title || `${p.side === "long" ? "Long" : "Short"} ${p.symbol}`),
             type: "active" as const,
-            side: (pos.side as "long" | "short") || "long",
-            entry_price:
-              typeof pos.entry_price === "number" ? pos.entry_price : undefined,
-            current_price:
-              typeof pos.current_price === "number"
-                ? pos.current_price
-                : undefined,
-            target_price:
-              typeof pos.target_price === "number"
-                ? pos.target_price
-                : undefined,
-            stop_loss:
-              typeof pos.stop_loss === "number" ? pos.stop_loss : undefined,
-            quantity: typeof pos.quantity === "number" ? pos.quantity : 0,
-            pnl: typeof pos.pnl === "number" ? pos.pnl : 0,
-            pnl_percentage:
-              typeof pos.pnl_percentage === "number"
-                ? pos.pnl_percentage
-                : 0,
-            timestamp: String(pos.timestamp || new Date().toISOString()),
-            status: String(pos.status || "active"),
+            side: (p.side as "long" | "short") || "long",
+            entry_price: typeof p.entry_price === "number" ? p.entry_price : undefined,
+            current_price: typeof p.current_price === "number" ? p.current_price : undefined,
+            target_price: typeof p.target_price === "number" ? p.target_price : undefined,
+            stop_loss: typeof p.stop_loss === "number" ? p.stop_loss : undefined,
+            quantity: typeof p.quantity === "number" ? p.quantity : 0,
+            pnl: typeof p.pnl === "number" ? p.pnl : 0,
+            pnl_percentage: typeof p.pnl_percentage === "number" ? p.pnl_percentage : 0,
+            timestamp: String(p.timestamp || new Date().toISOString()),
+            status: String(p.status || "active"),
+            reasoning: typeof p.reasoning === "string" ? p.reasoning : undefined,
+            confidence: typeof p.confidence === "number" ? p.confidence : undefined,
           };
         });
-
-        // TODO: Fetch potential trades from opportunities endpoint
-        // TODO: Fetch alerts from monitoring endpoint
-
-        setTrades(transformedTrades);
+        allTrades.push(...transformedPositions);
       }
+      
+      // Potential trades
+      if (potentialsRes.ok) {
+        const potentials = await potentialsRes.json();
+        const transformedPotentials: Trade[] = potentials.map((pot: unknown) => {
+          const p = pot as Record<string, unknown>;
+          return {
+            id: String(p.symbol || ""),
+            symbol: String(p.symbol || ""),
+            title: String(p.title || `Potential ${p.symbol}`),
+            type: "potential" as const,
+            side: (p.side as "long" | "short") || "long",
+            entry_price: typeof p.entry_price === "number" ? p.entry_price : undefined,
+            current_price: typeof p.current_price === "number" ? p.current_price : undefined,
+            target_price: typeof p.target_price === "number" ? p.target_price : undefined,
+            stop_loss: typeof p.stop_loss === "number" ? p.stop_loss : undefined,
+            quantity: typeof p.quantity === "number" ? p.quantity : 0,
+            pnl: 0,
+            pnl_percentage: 0,
+            timestamp: String(p.timestamp || new Date().toISOString()),
+            status: "potential",
+            reasoning: typeof p.reasoning === "string" ? p.reasoning : undefined,
+            confidence: typeof p.confidence === "number" ? p.confidence : undefined,
+            timeframe: typeof p.timeframe === "string" ? p.timeframe : undefined,
+            risk_level: typeof p.risk_level === "string" ? p.risk_level : undefined,
+          };
+        });
+        allTrades.push(...transformedPotentials);
+      }
+      
+      // Alerts
+      if (alertsRes.ok) {
+        const alerts = await alertsRes.json();
+        const transformedAlerts: Trade[] = alerts.map((alert: unknown) => {
+          const a = alert as Record<string, unknown>;
+          return {
+            id: String(a.id || ""),
+            symbol: String(a.symbol || "SYSTEM"),
+            title: String(a.title || "Alert"),
+            type: "alert" as const,
+            side: "long",
+            entry_price: undefined,
+            current_price: undefined,
+            target_price: undefined,
+            stop_loss: undefined,
+            quantity: 0,
+            pnl: 0,
+            pnl_percentage: 0,
+            timestamp: String(a.timestamp || new Date().toISOString()),
+            status: String(a.status || "alert"),
+            reasoning: typeof a.reasoning === "string" ? a.reasoning : undefined,
+          };
+        });
+        allTrades.push(...transformedAlerts);
+      }
+      
+      setTrades(allTrades);
     } catch (error) {
       console.error("Error fetching trades:", error);
     } finally {

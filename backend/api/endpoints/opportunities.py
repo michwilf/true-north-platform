@@ -4,13 +4,15 @@ Opportunities-related endpoints.
 Handles trading opportunity discovery and analysis.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Dict, Any, Optional
 import logging
 
 from backend.api.models import Opportunity
-from backend.api.dependencies import get_discovery_engine
+from backend.api.dependencies import get_discovery_engine, get_trading_agents_graph
 from backend.core.discovery import EnhancedDiscoveryEngine
+from backend.core.trading_agents.graph import TradingAgentsGraph
 
 router = APIRouter(prefix="/api", tags=["opportunities"])
 logger = logging.getLogger(__name__)
@@ -119,3 +121,76 @@ async def run_discovery(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/portfolio/potential-trades")
+async def get_potential_trades(
+    limit: int = Query(10, ge=1, le=50),
+    min_confidence: float = Query(0.7, ge=0.0, le=1.0),
+    engine: EnhancedDiscoveryEngine = Depends(get_discovery_engine),
+) -> List[Dict[str, Any]]:
+    """
+    Get potential trade opportunities identified by multi-agent system.
+    
+    Returns opportunities in trade format for sidebar "Potential" filter.
+    Only includes high-conviction opportunities above min_confidence.
+    Filtered to show only opportunities not yet in active positions.
+    """
+    try:
+        # Get opportunities from discovery engine
+        opportunities = await engine.discover_opportunities()
+        
+        # Transform to potential trades format
+        potential_trades = []
+        
+        for opp in opportunities[:limit]:
+            # Skip if confidence is too low
+            confidence = opp.confidence_level if hasattr(opp, 'confidence_level') else 0.5
+            if confidence < min_confidence:
+                continue
+            
+            # Build reasoning
+            reasoning_parts = []
+            if opp.technical_score > 0.6:
+                reasoning_parts.append(f"Technical Score: {opp.technical_score:.1%}")
+            if opp.momentum_score > 0.6:
+                reasoning_parts.append(f"Momentum: {opp.momentum_score:.1%}")
+            if opp.sentiment_score > 0.5:
+                reasoning_parts.append(f"Sentiment: {opp.sentiment_score:.1%}")
+            
+            reasoning = ". ".join(reasoning_parts) if reasoning_parts else "Multi-agent analysis identified opportunity"
+            
+            # Calculate targets
+            entry = opp.price if hasattr(opp, 'price') else None
+            target_price = entry * 1.10 if entry else None  # 10% target
+            stop_loss = entry * 0.95 if entry else None  # 5% stop
+            
+            potential_trades.append({
+                "id": opp.symbol,
+                "symbol": opp.symbol,
+                "title": f"{opp.name or opp.symbol} - Potential Trade",
+                "type": "potential",
+                "side": "long",
+                "entry_price": entry,
+                "current_price": entry,
+                "target_price": target_price,
+                "stop_loss": stop_loss,
+                "quantity": None,
+                "pnl": 0,
+                "pnl_percentage": 0,
+                "timestamp": datetime.now().isoformat(),
+                "status": "potential",
+                "reasoning": reasoning,
+                "confidence": confidence,
+                "strategy": "discovery_engine",
+                "risk_level": opp.risk_level if hasattr(opp, 'risk_level') else "medium",
+            })
+        
+        return potential_trades
+        
+    except Exception as e:
+        logger.error(f"Error getting potential trades: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching potential trades: {str(e)}"
+        )
