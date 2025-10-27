@@ -76,19 +76,22 @@ export default function TradesSidebar({
   const fetchTrades = async () => {
     setLoading(true);
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
-      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
+
       // Fetch from multiple endpoints in parallel
       const [positionsRes, potentialsRes, alertsRes] = await Promise.all([
         fetch(`${apiUrl}/api/portfolio/positions`),
-        fetch(`${apiUrl}/api/portfolio/potential-trades?limit=10&min_confidence=0.7`),
-        fetch(`${apiUrl}/api/monitoring/alerts?acknowledged=false&resolved=false&limit=20`),
+        fetch(
+          `${apiUrl}/api/portfolio/potential-trades?limit=10&min_confidence=0.7`
+        ),
+        fetch(
+          `${apiUrl}/api/monitoring/alerts?acknowledged=false&resolved=false&limit=20`
+        ),
       ]);
-      
+
       // Transform all responses to Trade format
       const allTrades: Trade[] = [];
-      
+
       // Active positions
       if (positionsRes.ok) {
         const positions = await positionsRes.json();
@@ -97,54 +100,75 @@ export default function TradesSidebar({
           return {
             id: String(p.symbol || ""),
             symbol: String(p.symbol || ""),
-            title: String(p.title || `${p.side === "long" ? "Long" : "Short"} ${p.symbol}`),
+            title: String(
+              p.title || `${p.side === "long" ? "Long" : "Short"} ${p.symbol}`
+            ),
             type: "active" as const,
             side: (p.side as "long" | "short") || "long",
-            entry_price: typeof p.entry_price === "number" ? p.entry_price : undefined,
-            current_price: typeof p.current_price === "number" ? p.current_price : undefined,
-            target_price: typeof p.target_price === "number" ? p.target_price : undefined,
-            stop_loss: typeof p.stop_loss === "number" ? p.stop_loss : undefined,
+            entry_price:
+              typeof p.entry_price === "number" ? p.entry_price : undefined,
+            current_price:
+              typeof p.current_price === "number" ? p.current_price : undefined,
+            target_price:
+              typeof p.target_price === "number" ? p.target_price : undefined,
+            stop_loss:
+              typeof p.stop_loss === "number" ? p.stop_loss : undefined,
             quantity: typeof p.quantity === "number" ? p.quantity : 0,
             pnl: typeof p.pnl === "number" ? p.pnl : 0,
-            pnl_percentage: typeof p.pnl_percentage === "number" ? p.pnl_percentage : 0,
+            pnl_percentage:
+              typeof p.pnl_percentage === "number" ? p.pnl_percentage : 0,
             timestamp: String(p.timestamp || new Date().toISOString()),
             status: String(p.status || "active"),
-            reasoning: typeof p.reasoning === "string" ? p.reasoning : undefined,
-            confidence: typeof p.confidence === "number" ? p.confidence : undefined,
+            reasoning:
+              typeof p.reasoning === "string" ? p.reasoning : undefined,
+            confidence:
+              typeof p.confidence === "number" ? p.confidence : undefined,
           };
         });
         allTrades.push(...transformedPositions);
       }
-      
+
       // Potential trades
       if (potentialsRes.ok) {
         const potentials = await potentialsRes.json();
-        const transformedPotentials: Trade[] = potentials.map((pot: unknown) => {
-          const p = pot as Record<string, unknown>;
-          return {
-            id: String(p.symbol || ""),
-            symbol: String(p.symbol || ""),
-            title: String(p.title || `Potential ${p.symbol}`),
-            type: "potential" as const,
-            side: (p.side as "long" | "short") || "long",
-            entry_price: typeof p.entry_price === "number" ? p.entry_price : undefined,
-            current_price: typeof p.current_price === "number" ? p.current_price : undefined,
-            target_price: typeof p.target_price === "number" ? p.target_price : undefined,
-            stop_loss: typeof p.stop_loss === "number" ? p.stop_loss : undefined,
-            quantity: typeof p.quantity === "number" ? p.quantity : 0,
-            pnl: 0,
-            pnl_percentage: 0,
-            timestamp: String(p.timestamp || new Date().toISOString()),
-            status: "potential",
-            reasoning: typeof p.reasoning === "string" ? p.reasoning : undefined,
-            confidence: typeof p.confidence === "number" ? p.confidence : undefined,
-            timeframe: typeof p.timeframe === "string" ? p.timeframe : undefined,
-            risk_level: typeof p.risk_level === "string" ? p.risk_level : undefined,
-          };
-        });
+        const transformedPotentials: Trade[] = potentials.map(
+          (pot: unknown) => {
+            const p = pot as Record<string, unknown>;
+            return {
+              id: String(p.symbol || ""),
+              symbol: String(p.symbol || ""),
+              title: String(p.title || `Potential ${p.symbol}`),
+              type: "potential" as const,
+              side: (p.side as "long" | "short") || "long",
+              entry_price:
+                typeof p.entry_price === "number" ? p.entry_price : undefined,
+              current_price:
+                typeof p.current_price === "number"
+                  ? p.current_price
+                  : undefined,
+              target_price:
+                typeof p.target_price === "number" ? p.target_price : undefined,
+              stop_loss:
+                typeof p.stop_loss === "number" ? p.stop_loss : undefined,
+              quantity: typeof p.quantity === "number" ? p.quantity : 0,
+              pnl: 0,
+              pnl_percentage: 0,
+              timestamp: String(p.timestamp || new Date().toISOString()),
+              status: "potential",
+              reasoning:
+                typeof p.reasoning === "string" ? p.reasoning : undefined,
+              confidence:
+                typeof p.confidence === "number" ? p.confidence : undefined,
+              timeframe:
+                typeof p.timeframe === "string" ? p.timeframe : undefined,
+              risk_level:
+                typeof p.risk_level === "string" ? p.risk_level : undefined,
+            };
+          }
+        );
         allTrades.push(...transformedPotentials);
       }
-      
+
       // Alerts
       if (alertsRes.ok) {
         const alerts = await alertsRes.json();
@@ -165,12 +189,13 @@ export default function TradesSidebar({
             pnl_percentage: 0,
             timestamp: String(a.timestamp || new Date().toISOString()),
             status: String(a.status || "alert"),
-            reasoning: typeof a.reasoning === "string" ? a.reasoning : undefined,
+            reasoning:
+              typeof a.reasoning === "string" ? a.reasoning : undefined,
           };
         });
         allTrades.push(...transformedAlerts);
       }
-      
+
       setTrades(allTrades);
     } catch (error) {
       console.error("Error fetching trades:", error);
@@ -379,8 +404,7 @@ export default function TradesSidebar({
                                 trade.pnl
                               )}`}
                             >
-                              {trade.pnl >= 0 ? "+" : ""}$
-                              {trade.pnl.toFixed(2)}
+                              {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}
                             </p>
                             <p
                               className={`text-xs font-medium ${getPnLColor(
@@ -388,7 +412,9 @@ export default function TradesSidebar({
                               )}`}
                             >
                               {trade.pnl_percentage !== undefined &&
-                                `${trade.pnl_percentage >= 0 ? "+" : ""}${trade.pnl_percentage.toFixed(2)}%`}
+                                `${
+                                  trade.pnl_percentage >= 0 ? "+" : ""
+                                }${trade.pnl_percentage.toFixed(2)}%`}
                             </p>
                           </div>
                         )}
@@ -546,4 +572,3 @@ export default function TradesSidebar({
     </AnimatePresence>
   );
 }
-

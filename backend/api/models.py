@@ -103,6 +103,7 @@ class StockAnalysisResponse(BaseModel):
 
 # Phase 2: Trade Execution Models
 
+
 class OpenPositionRequest(BaseModel):
     """Request to open a new portfolio position."""
 

@@ -157,14 +157,11 @@ class PortfolioTracker:
 
         try:
             collection = self._get_collection("PORTFOLIO_POSITIONS")
-            
+
             # Add last_updated timestamp
             updates["last_updated"] = datetime.now()
-            
-            result = collection.update_one(
-                {"symbol": symbol},
-                {"$set": updates}
-            )
+
+            result = collection.update_one({"symbol": symbol}, {"$set": updates})
 
             if result.modified_count > 0:
                 logger.debug(f"✅ Position updated: {symbol}")

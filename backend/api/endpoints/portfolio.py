@@ -49,20 +49,20 @@ async def get_portfolio_positions(
 ) -> List[Dict[str, Any]]:
     """
     Get all active portfolio positions with detailed P&L information.
-    
+
     Returns list of positions for the trades sidebar, including:
     - Symbol and position details
     - Entry price and current price
     - P&L (dollars and percentage)
     - Position value and share count
     - Timestamp
-    
+
     This endpoint is used by the global trades sidebar to display active positions.
     """
     try:
         # Get current positions from tracker
         positions = tracker.get_positions()
-        
+
         # Transform to API format expected by frontend
         return [
             {
@@ -76,7 +76,11 @@ async def get_portfolio_positions(
                 "quantity": pos.shares,
                 "pnl": pos.unrealized_pnl,
                 "pnl_percentage": pos.unrealized_pnl_percent,
-                "timestamp": pos.entry_date.isoformat() if isinstance(pos.entry_date, datetime) else pos.entry_date,
+                "timestamp": (
+                    pos.entry_date.isoformat()
+                    if isinstance(pos.entry_date, datetime)
+                    else pos.entry_date
+                ),
                 "status": "active",
                 "position_value": pos.position_value,
                 # Phase 2: Now populated from enhanced Position model
@@ -89,8 +93,7 @@ async def get_portfolio_positions(
         ]
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error fetching portfolio positions: {str(e)}"
+            status_code=500, detail=f"Error fetching portfolio positions: {str(e)}"
         )
 
 
@@ -101,7 +104,7 @@ async def open_position(
 ) -> PositionResponse:
     """
     Open a new portfolio position.
-    
+
     Used by "Execute Trade" button in research modal and opportunities page.
     Creates a new position with comprehensive metadata including targets, stops, reasoning, and confidence.
     """
@@ -119,42 +122,39 @@ async def open_position(
             timeframe=request.timeframe,
             risk_level=request.risk_level,
         )
-        
+
         if success:
             # Get the newly created position
             positions = tracker.get_positions()
             new_position = next(
-                (p for p in positions if p.symbol == request.symbol),
-                None
+                (p for p in positions if p.symbol == request.symbol), None
             )
-            
-            position_data = {
-                "symbol": new_position.symbol,
-                "shares": new_position.shares,
-                "entry_price": new_position.entry_price,
-                "current_price": new_position.current_price,
-                "side": new_position.side,
-                "target_price": new_position.target_price,
-                "stop_loss": new_position.stop_loss,
-                "reasoning": new_position.reasoning,
-                "confidence": new_position.confidence,
-            } if new_position else None
-            
+
+            position_data = (
+                {
+                    "symbol": new_position.symbol,
+                    "shares": new_position.shares,
+                    "entry_price": new_position.entry_price,
+                    "current_price": new_position.current_price,
+                    "side": new_position.side,
+                    "target_price": new_position.target_price,
+                    "stop_loss": new_position.stop_loss,
+                    "reasoning": new_position.reasoning,
+                    "confidence": new_position.confidence,
+                }
+                if new_position
+                else None
+            )
+
             return PositionResponse(
                 success=True,
                 message=f"Position opened successfully: {request.shares} shares of {request.symbol}",
                 position=position_data,
             )
         else:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to open position"
-            )
+            raise HTTPException(status_code=500, detail="Failed to open position")
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error opening position: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error opening position: {str(e)}")
 
 
 @router.patch("/portfolio/positions/{symbol}", response_model=PositionResponse)
@@ -165,7 +165,7 @@ async def update_position(
 ) -> PositionResponse:
     """
     Update an existing position.
-    
+
     Allows updating specific fields like stop loss, target price, or adding reasoning.
     Used by "Update Alert" functionality.
     """
@@ -179,15 +179,14 @@ async def update_position(
             updates["reasoning"] = request.reasoning
         if request.shares is not None:
             updates["shares"] = request.shares
-        
+
         if not updates:
             raise HTTPException(
-                status_code=400,
-                detail="No valid update fields provided"
+                status_code=400, detail="No valid update fields provided"
             )
-        
+
         success = tracker.update_position(symbol, updates)
-        
+
         if success:
             return PositionResponse(
                 success=True,
@@ -195,16 +194,12 @@ async def update_position(
                 position={"symbol": symbol, **updates},
             )
         else:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Position not found: {symbol}"
-            )
+            raise HTTPException(status_code=404, detail=f"Position not found: {symbol}")
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error updating position: {str(e)}"
+            status_code=500, detail=f"Error updating position: {str(e)}"
         )
 
 
@@ -216,7 +211,7 @@ async def close_position(
 ) -> PositionResponse:
     """
     Close an existing position and record the trade.
-    
+
     Calculates final P&L based on close_price (or current price if not provided)
     and moves position to trade history.
     """
@@ -224,22 +219,19 @@ async def close_position(
         # Get the position before closing
         positions = tracker.get_positions()
         position = next((p for p in positions if p.symbol == symbol), None)
-        
+
         if not position:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Position not found: {symbol}"
-            )
-        
+            raise HTTPException(status_code=404, detail=f"Position not found: {symbol}")
+
         # Use provided close price or current price
         exit_price = close_price if close_price is not None else position.current_price
-        
+
         # Calculate final P&L
         cost_basis = position.shares * position.entry_price
         final_value = position.shares * exit_price
         final_pnl = final_value - cost_basis
         final_pnl_percent = (final_pnl / cost_basis * 100) if cost_basis > 0 else 0
-        
+
         # Record the trade
         tracker.record_trade(
             symbol=symbol,
@@ -249,10 +241,10 @@ async def close_position(
             pnl=final_pnl,
             pnl_percent=final_pnl_percent,
         )
-        
+
         # Remove the position
         success = tracker.remove_position(symbol)
-        
+
         if success:
             return PositionResponse(
                 success=True,
@@ -265,14 +257,8 @@ async def close_position(
                 },
             )
         else:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to close position"
-            )
+            raise HTTPException(status_code=500, detail="Failed to close position")
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error closing position: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error closing position: {str(e)}")

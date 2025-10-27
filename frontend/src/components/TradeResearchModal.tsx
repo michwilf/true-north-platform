@@ -78,9 +78,9 @@ export default function TradeResearchModal({
 }: TradeResearchModalProps) {
   const [loading, setLoading] = useState(false);
   const [research, setResearch] = useState<ResearchData | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "agents" | "details"
-  >("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "agents" | "details">(
+    "overview"
+  );
   const [executing, setExecuting] = useState(false);
   const [executionError, setExecutionError] = useState<string | null>(null);
 
@@ -93,8 +93,7 @@ export default function TradeResearchModal({
   const fetchResearch = async () => {
     setLoading(true);
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
       const response = await fetch(
         `${apiUrl}/api/analyze-stock/${trade.symbol}`
       );
@@ -112,7 +111,7 @@ export default function TradeResearchModal({
   const handleExecuteTrade = async () => {
     setExecuting(true);
     setExecutionError(null);
-    
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
       const response = await fetch(`${apiUrl}/api/portfolio/positions`, {
@@ -121,25 +120,30 @@ export default function TradeResearchModal({
         body: JSON.stringify({
           symbol: trade.symbol,
           shares: 100, // TODO: Add quantity input
-          entry_price: trade.current_price || research?.price_targets?.base_case || trade.entry_price,
+          entry_price:
+            trade.current_price ||
+            research?.price_targets?.base_case ||
+            trade.entry_price,
           side: trade.side || "long",
-          target_price: research?.price_targets?.bull_case || trade.target_price,
+          target_price:
+            research?.price_targets?.bull_case || trade.target_price,
           stop_loss: research?.price_targets?.bear_case || trade.stop_loss,
-          reasoning: research?.debate_summary || research?.synthesis || trade.reasoning,
+          reasoning:
+            research?.debate_summary || research?.synthesis || trade.reasoning,
           confidence: research?.confidence || trade.confidence,
           strategy: "multi_agent_analysis",
           timeframe: "medium-term",
           risk_level: "medium",
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to execute trade");
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // Show success message and close modal
         alert(`Trade executed successfully: ${result.message}`);
@@ -147,7 +151,9 @@ export default function TradeResearchModal({
       }
     } catch (error) {
       console.error("Trade execution error:", error);
-      setExecutionError(error instanceof Error ? error.message : "Failed to execute trade");
+      setExecutionError(
+        error instanceof Error ? error.message : "Failed to execute trade"
+      );
     } finally {
       setExecuting(false);
     }
@@ -248,7 +254,11 @@ export default function TradeResearchModal({
                 {[
                   { id: "overview", label: "Overview", icon: SparklesIcon },
                   { id: "agents", label: "Agent Analysis", icon: ChartBarIcon },
-                  { id: "details", label: "Trade Details", icon: CalculatorIcon },
+                  {
+                    id: "details",
+                    label: "Trade Details",
+                    icon: CalculatorIcon,
+                  },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -450,8 +460,7 @@ export default function TradeResearchModal({
                           Object.entries(research.agents).map(
                             ([agentKey, agentData]) => {
                               if (!agentData) return null;
-                              const Icon =
-                                agentIcons[agentKey] || ChartBarIcon;
+                              const Icon = agentIcons[agentKey] || ChartBarIcon;
                               const agentName = agentKey
                                 .split("_")
                                 .map(
@@ -501,7 +510,8 @@ export default function TradeResearchModal({
                                         </p>
                                         <p className="text-xl font-bold text-blue-600">
                                           {(
-                                            Number(agentData.position_size) * 100
+                                            Number(agentData.position_size) *
+                                            100
                                           ).toFixed(0)}
                                           %
                                         </p>
@@ -584,10 +594,10 @@ export default function TradeResearchModal({
                 </p>
               </div>
             )}
-            
+
             <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800">
               <div className="flex space-x-3">
-                <button 
+                <button
                   onClick={handleExecuteTrade}
                   disabled={executing}
                   className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -611,4 +621,3 @@ export default function TradeResearchModal({
     </AnimatePresence>
   );
 }
-

@@ -131,7 +131,7 @@ async def get_potential_trades(
 ) -> List[Dict[str, Any]]:
     """
     Get potential trade opportunities identified by multi-agent system.
-    
+
     Returns opportunities in trade format for sidebar "Potential" filter.
     Only includes high-conviction opportunities above min_confidence.
     Filtered to show only opportunities not yet in active positions.
@@ -139,16 +139,18 @@ async def get_potential_trades(
     try:
         # Get opportunities from discovery engine
         opportunities = await engine.discover_opportunities()
-        
+
         # Transform to potential trades format
         potential_trades = []
-        
+
         for opp in opportunities[:limit]:
             # Skip if confidence is too low
-            confidence = opp.confidence_level if hasattr(opp, 'confidence_level') else 0.5
+            confidence = (
+                opp.confidence_level if hasattr(opp, "confidence_level") else 0.5
+            )
             if confidence < min_confidence:
                 continue
-            
+
             # Build reasoning
             reasoning_parts = []
             if opp.technical_score > 0.6:
@@ -157,40 +159,47 @@ async def get_potential_trades(
                 reasoning_parts.append(f"Momentum: {opp.momentum_score:.1%}")
             if opp.sentiment_score > 0.5:
                 reasoning_parts.append(f"Sentiment: {opp.sentiment_score:.1%}")
-            
-            reasoning = ". ".join(reasoning_parts) if reasoning_parts else "Multi-agent analysis identified opportunity"
-            
+
+            reasoning = (
+                ". ".join(reasoning_parts)
+                if reasoning_parts
+                else "Multi-agent analysis identified opportunity"
+            )
+
             # Calculate targets
-            entry = opp.price if hasattr(opp, 'price') else None
+            entry = opp.price if hasattr(opp, "price") else None
             target_price = entry * 1.10 if entry else None  # 10% target
             stop_loss = entry * 0.95 if entry else None  # 5% stop
-            
-            potential_trades.append({
-                "id": opp.symbol,
-                "symbol": opp.symbol,
-                "title": f"{opp.name or opp.symbol} - Potential Trade",
-                "type": "potential",
-                "side": "long",
-                "entry_price": entry,
-                "current_price": entry,
-                "target_price": target_price,
-                "stop_loss": stop_loss,
-                "quantity": None,
-                "pnl": 0,
-                "pnl_percentage": 0,
-                "timestamp": datetime.now().isoformat(),
-                "status": "potential",
-                "reasoning": reasoning,
-                "confidence": confidence,
-                "strategy": "discovery_engine",
-                "risk_level": opp.risk_level if hasattr(opp, 'risk_level') else "medium",
-            })
-        
+
+            potential_trades.append(
+                {
+                    "id": opp.symbol,
+                    "symbol": opp.symbol,
+                    "title": f"{opp.name or opp.symbol} - Potential Trade",
+                    "type": "potential",
+                    "side": "long",
+                    "entry_price": entry,
+                    "current_price": entry,
+                    "target_price": target_price,
+                    "stop_loss": stop_loss,
+                    "quantity": None,
+                    "pnl": 0,
+                    "pnl_percentage": 0,
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "potential",
+                    "reasoning": reasoning,
+                    "confidence": confidence,
+                    "strategy": "discovery_engine",
+                    "risk_level": (
+                        opp.risk_level if hasattr(opp, "risk_level") else "medium"
+                    ),
+                }
+            )
+
         return potential_trades
-        
+
     except Exception as e:
         logger.error(f"Error getting potential trades: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Error fetching potential trades: {str(e)}"
+            status_code=500, detail=f"Error fetching potential trades: {str(e)}"
         )
