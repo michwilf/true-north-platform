@@ -36,11 +36,13 @@ interface Trade {
 interface TradesSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onTradeSelect?: (trade: Trade) => void;
 }
 
 export default function TradesSidebar({
   isOpen,
   onClose,
+  onTradeSelect,
 }: TradesSidebarProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(false);
@@ -433,7 +435,10 @@ export default function TradesSidebar({
                               </div>
                             )}
                             <div className="flex space-x-2 mt-4">
-                              <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                              <button
+                                onClick={() => onTradeSelect?.(trade)}
+                                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                              >
                                 View Details
                               </button>
                               <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">

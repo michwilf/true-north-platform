@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   useMarketRegime,
   useOpportunities,
@@ -11,7 +10,6 @@ import {
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import {
   XAxis,
@@ -23,7 +21,6 @@ import {
   Area,
 } from "recharts";
 import { motion } from "framer-motion";
-import TradesSidebar from "@/components/TradesSidebar";
 
 // Sample data - will be replaced with API calls
 const portfolioData = [
@@ -72,8 +69,6 @@ const _recentSignals = [
 ];
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   // API hooks for real data
   const { data: marketRegime, loading: regimeLoading } = useMarketRegime();
   const {
@@ -319,29 +314,6 @@ export default function Dashboard() {
           </div>
         </div>
       </motion.div>
-
-      {/* Floating Trades Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.5, type: "spring" }}
-        onClick={() => setSidebarOpen(true)}
-        className="fixed bottom-8 right-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:shadow-blue-500/50 hover:scale-110 transition-all z-30 flex items-center space-x-2"
-      >
-        <ChartBarIcon className="h-6 w-6" />
-        <span className="font-semibold pr-2">Trades</span>
-        {portfolioMetrics?.active_positions !== undefined && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-            {portfolioMetrics.active_positions}
-          </span>
-        )}
-      </motion.button>
-
-      {/* Trades Sidebar */}
-      <TradesSidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
     </main>
   );
 }
